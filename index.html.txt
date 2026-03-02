@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard de Carteras - Actualizable desde Excel</title>
     
-    <!-- LibrerÌas necesarias -->
+    <!-- Librer√≠as necesarias -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
     
     <style>
-        /* Mismo CSS que tu dashboard original, lo copiamos aquÌ */
+        /* Mismo CSS que tu dashboard original, lo copiamos aqu√≠ */
         :root {
             --bg:      #FFFFFF;
             --bg2:     #F5F7FA;
@@ -60,7 +60,7 @@
         .logo span { color: #1F3B73; }
         .header-date { color: var(--text3); font-size: 12px; font-weight: 300; }
 
-        /* BOT”N DE CARGA */
+        /* BOT√ìN DE CARGA */
         .upload-btn {
             background: linear-gradient(135deg, #1F3B73, #3660C0);
             color: white;
@@ -277,7 +277,7 @@
         <div id="badge-tipo-header"></div>
         <div class="header-date" id="fecha-actualizacion">Sin datos cargados</div>
         <label class="upload-btn">
-            ?? Cargar Excel
+            üì§ Cargar Excel
             <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv">
         </label>
     </div>
@@ -287,19 +287,19 @@
     <div class="sel-group">
         <div class="sel-label">Tipo de cliente</div>
         <select id="sel-tipo" onchange="onTipoChange()">
-            <option value="">ó Todos los tipos ó</option>
+            <option value="">‚Äî Todos los tipos ‚Äî</option>
         </select>
     </div>
     <div class="sel-group">
         <div class="sel-label">Grupo</div>
         <select id="sel-grupo" onchange="onGrupoChange()">
-            <option value="">ó Todos los grupos ó</option>
+            <option value="">‚Äî Todos los grupos ‚Äî</option>
         </select>
     </div>
     <div class="sel-group">
         <div class="sel-label">Cliente / Cartera</div>
         <select id="sel-cliente" onchange="onClienteChange()">
-            <option value="">ó Selecciona cliente ó</option>
+            <option value="">‚Äî Selecciona cliente ‚Äî</option>
         </select>
     </div>
     <div id="info-codigo" style="color:var(--text3);font-size:11px;margin-top:18px;"></div>
@@ -307,7 +307,7 @@
 
 <div class="main" id="main-content">
     <div class="no-data" style="padding:80px;">
-        <div style="font-size:40px;margin-bottom:16px;">??</div>
+        <div style="font-size:40px;margin-bottom:16px;">üìä</div>
         <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Carga un archivo Excel</div>
         <div style="color:var(--text3);">Haz clic en "Cargar Excel" para subir tus datos actualizados</div>
     </div>
@@ -329,13 +329,13 @@ let chartInstances = [];
 // UTILIDADES (mismas que tu dashboard original)
 // ============================================================
 const fmt = (n, dec=2) => n != null ? n.toLocaleString('es-ES', {minimumFractionDigits:dec, maximumFractionDigits:dec}) : '-';
-const fmtEur = (n) => n != null ? 'Ä ' + n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0}) : '-';
+const fmtEur = (n) => n != null ? '‚Ç¨ ' + n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0}) : '-';
 const fmtPct = (n) => n != null ? fmt(n) + '%' : '-';
 
 function tipoPill(tipo) {
     if (!tipo) return '';
     const cls = tipo.includes('Ases') ? 'badge-a' : tipo.includes('Gest') ? 'badge-g' : 'badge-p';
-    const lbl = tipo.includes('Ases') ? 'Asesoramiento' : tipo.includes('Gest') ? 'GestiÛn' : 'PartÌcipe';
+    const lbl = tipo.includes('Ases') ? 'Asesoramiento' : tipo.includes('Gest') ? 'Gesti√≥n' : 'Part√≠cipe';
     return `<span class="badge-tipo ${cls}">${lbl}</span>`;
 }
 
@@ -439,17 +439,17 @@ async function readExcelFile(file) {
 // TRANSFORMAR DATOS DE EXCEL AL FORMATO DEL DASHBOARD
 // ============================================================
 function transformExcelData(excelRows) {
-    // Esta funciÛn debe adaptarse seg˙n la estructura de tu Excel
-    // AquÌ te doy un ejemplo basado en los datos que tenÌas
+    // Esta funci√≥n debe adaptarse seg√∫n la estructura de tu Excel
+    // Aqu√≠ te doy un ejemplo basado en los datos que ten√≠as
     
     const clientes = [];
     
     // Saltamos la primera fila si es cabecera
     for (let i = 1; i < excelRows.length; i++) {
         const row = excelRows[i];
-        if (!row || row.length < 5) continue; // Saltar filas vacÌas
+        if (!row || row.length < 5) continue; // Saltar filas vac√≠as
         
-        // Adapta estos Ìndices seg˙n las columnas de tu Excel
+        // Adapta estos √≠ndices seg√∫n las columnas de tu Excel
         const cliente = {
             tipo: row[0] || 'A - Asesoramiento',      // Columna A
             grupo: parseInt(row[1]) || 0,              // Columna B
@@ -461,7 +461,7 @@ function transformExcelData(excelRows) {
                 vol: parseFloat(row[6]) || 0,          // Columna G
                 sharpe: parseFloat(row[7]) || 0,       // Columna H
                 var95: parseFloat(row[8]) || 0,        // Columna I
-                fondos: [],                             // Lo rellenaremos despuÈs
+                fondos: [],                             // Lo rellenaremos despu√©s
                 categoria: {},
                 divisa: {},
                 zona: {},
@@ -472,15 +472,15 @@ function transformExcelData(excelRows) {
         clientes.push(cliente);
     }
     
-    // AquÌ deberÌas aÒadir la lÛgica para procesar los fondos
-    // y las distribuciones por categorÌa, divisa, etc.
-    // Basado en cÛmo tengas estructurado tu Excel
+    // Aqu√≠ deber√≠as a√±adir la l√≥gica para procesar los fondos
+    // y las distribuciones por categor√≠a, divisa, etc.
+    // Basado en c√≥mo tengas estructurado tu Excel
     
     return { clientes };
 }
 
 // ============================================================
-// FUNCIONES DE SELECCI”N (adaptadas de tu original)
+// FUNCIONES DE SELECCI√ìN (adaptadas de tu original)
 // ============================================================
 function getGrupoId(cliente) {
     return cliente.grupo;
@@ -502,7 +502,7 @@ function getClienteLabel(cliente) {
 function populateTipoSelect() {
     const tipos = [...new Set(RAW_DATA.clientes.map(c => c.tipo))];
     const selTipo = document.getElementById('sel-tipo');
-    selTipo.innerHTML = '<option value="">ó Todos los tipos ó</option>';
+    selTipo.innerHTML = '<option value="">‚Äî Todos los tipos ‚Äî</option>';
     
     tipos.sort().forEach(tipo => {
         const opt = document.createElement('option');
@@ -515,7 +515,7 @@ function populateTipoSelect() {
 function onTipoChange() {
     const tipo = document.getElementById('sel-tipo').value;
     const selGrupo = document.getElementById('sel-grupo');
-    selGrupo.innerHTML = '<option value="">ó Todos los grupos ó</option>';
+    selGrupo.innerHTML = '<option value="">‚Äî Todos los grupos ‚Äî</option>';
 
     const filtered = RAW_DATA.clientes.filter(c => !tipo || c.tipo === tipo);
     const grupos = [...new Map(filtered.map(c => [String(c.grupo), c])).values()]
@@ -543,12 +543,12 @@ function populateClientes() {
     const tipo = document.getElementById('sel-tipo').value;
     const grupo = document.getElementById('sel-grupo').value;
     const sel = document.getElementById('sel-cliente');
-    sel.innerHTML = '<option value="">ó Todos los clientes ó</option>';
+    sel.innerHTML = '<option value="">‚Äî Todos los clientes ‚Äî</option>';
 
     if (grupo) {
         const optGroup = document.createElement('option');
         optGroup.value = '__grupo__' + grupo;
-        optGroup.textContent = '?? Ver grupo ' + grupo + ' ó consolidado';
+        optGroup.textContent = 'üìä Ver grupo ' + grupo + ' ‚Äî consolidado';
         sel.appendChild(optGroup);
     }
 
@@ -587,7 +587,7 @@ function onClienteChange() {
 function clearDashboard() {
     document.getElementById('main-content').innerHTML = `
         <div class="no-data" style="padding:80px;">
-            <div style="font-size:40px;margin-bottom:16px;">??</div>
+            <div style="font-size:40px;margin-bottom:16px;">üìä</div>
             <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Selecciona un cliente</div>
             <div style="color:var(--text3);">Usa los filtros superiores para visualizar el dashboard</div>
         </div>`;
@@ -596,7 +596,7 @@ function clearDashboard() {
 }
 
 // ============================================================
-// FUNCIONES DE CONSOLIDACI”N (simplificadas)
+// FUNCIONES DE CONSOLIDACI√ìN (simplificadas)
 // ============================================================
 function consolidarTodos() {
     const tipo = document.getElementById('sel-tipo').value;
@@ -655,7 +655,7 @@ function consolidarGrupo(grupoId) {
         tipo: miembros[0].tipo,
         grupo: grupoId,
         codigo: 'GRUPO-' + grupoId,
-        nombre: `Grupo ${grupoId} ó Consolidado (${miembros.length} carteras)`,
+        nombre: `Grupo ${grupoId} ‚Äî Consolidado (${miembros.length} carteras)`,
         _esGrupo: true,
         _miembros: miembros,
         cartera: {
@@ -686,68 +686,68 @@ function renderDashboard(cliente) {
     
     document.getElementById('info-codigo').textContent = cliente._esGrupo
         ? `Grupo ${cliente.grupo} | ${cliente._miembros.length} carteras consolidadas | Patrimonio total: ${fmtEur(total)}`
-        : `CÛdigo: ${cliente.codigo} | Grupo: ${cliente.grupo}`;
+        : `C√≥digo: ${cliente.codigo} | Grupo: ${cliente.grupo}`;
 
     document.getElementById('main-content').innerHTML = `
         <div class="fade-in">
-            <div class="section-title">${cliente._esGrupo ? "Grupo Consolidado ó " : "Resumen de Cartera ó "}${cliente.nombre}</div>
+            <div class="section-title">${cliente._esGrupo ? "Grupo Consolidado ‚Äî " : "Resumen de Cartera ‚Äî "}${cliente.nombre}</div>
             
-            <!-- KPIs b·sicos -->
+            <!-- KPIs b√°sicos -->
             <div class="kpi-grid" id="kpi-grid">
                 <div class="kpi-card blue">
-                    <div class="kpi-icon">??</div>
+                    <div class="kpi-icon">üíº</div>
                     <div class="kpi-label">Patrimonio Total</div>
                     <div class="kpi-value">${fmtEur(total)}</div>
                     <div class="kpi-sub">${cliente._esGrupo ? cliente._miembros.length + ' carteras' : 'En fondos'}</div>
                 </div>
                 <div class="kpi-card green">
-                    <div class="kpi-icon">??</div>
+                    <div class="kpi-icon">üìà</div>
                     <div class="kpi-label">Rent. Esperada</div>
                     <div class="kpi-value">${fmtPct(cart.rent_esp)}</div>
                     <div class="kpi-sub">Ponderada</div>
                 </div>
                 <div class="kpi-card ${cart.vol >= 12 ? 'red' : cart.vol >= 7 ? 'orange' : 'green'}">
-                    <div class="kpi-icon">?</div>
+                    <div class="kpi-icon">‚ö°</div>
                     <div class="kpi-label">Volatilidad</div>
                     <div class="kpi-value">${fmtPct(cart.vol)}</div>
-                    <div class="kpi-sub">Desv. est·ndar</div>
+                    <div class="kpi-sub">Desv. est√°ndar</div>
                 </div>
                 <div class="kpi-card gold">
-                    <div class="kpi-icon">??</div>
+                    <div class="kpi-icon">‚öñÔ∏è</div>
                     <div class="kpi-label">Sharpe Ratio</div>
                     <div class="kpi-value">${fmt(cart.sharpe)}</div>
                     <div class="kpi-sub">Rf = 3%</div>
                 </div>
                 <div class="kpi-card red">
-                    <div class="kpi-icon">???</div>
+                    <div class="kpi-icon">üõ°Ô∏è</div>
                     <div class="kpi-label">VaR 95%</div>
                     <div class="kpi-value">${fmtPct(cart.var95)}</div>
-                    <div class="kpi-sub">PÈrdida m·x.</div>
+                    <div class="kpi-sub">P√©rdida m√°x.</div>
                 </div>
             </div>
 
             <!-- Mensaje informativo -->
             <div class="panel" style="margin-top: 20px;">
                 <div class="panel-header">
-                    <div class="panel-title">?? Nota sobre los datos</div>
+                    <div class="panel-title">üìù Nota sobre los datos</div>
                 </div>
                 <div class="panel-body">
                     <p style="color: var(--text2); font-size: 13px;">
-                        Este dashboard est· configurado para cargar datos desde Excel. 
-                        Para ver la informaciÛn completa con gr·ficos y an·lisis detallado,
+                        Este dashboard est√° configurado para cargar datos desde Excel. 
+                        Para ver la informaci√≥n completa con gr√°ficos y an√°lisis detallado,
                         necesitas estructurar tu Excel con todas las columnas necesarias 
-                        (fondos, categorÌas, divisas, zonas, sectores).
+                        (fondos, categor√≠as, divisas, zonas, sectores).
                     </p>
                     <p style="color: var(--text3); font-size: 12px; margin-top: 10px;">
-                        Los KPIs b·sicos ya funcionan. Para el an·lisis completo, adapta la 
-                        funciÛn <code>transformExcelData()</code> seg˙n la estructura de tu Excel.
+                        Los KPIs b√°sicos ya funcionan. Para el an√°lisis completo, adapta la 
+                        funci√≥n <code>transformExcelData()</code> seg√∫n la estructura de tu Excel.
                     </p>
                 </div>
             </div>
         </div>`;
 }
 
-// InicializaciÛn
+// Inicializaci√≥n
 onTipoChange();
 </script>
 </body>
