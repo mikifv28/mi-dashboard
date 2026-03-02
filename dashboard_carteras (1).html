@@ -1,0 +1,1100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard de Carteras de Inversión</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #FFFFFF;
+    --bg2:     #F5F7FA;
+    --bg3:     #E8ECF2;
+    --card:    #FFFFFF;
+    --card2:   #FAFBFC;
+    --border:  #D5D9DE;
+    --accent:  #1F3B73;
+    --accent2: #3660C0;
+    --gold:    #A37512;
+    --green:   #059669;
+    --red:     #dc2626;
+    --orange:  #ea580c;
+    --text:    #1F3B73;
+    --text2:   #003B6C;
+    --text3:   #7F7F7F;
+    --shadow:  0 1px 3px rgba(31,59,115,0.08), 0 1px 2px rgba(31,59,115,0.04);
+    --shadow-md: 0 4px 6px rgba(31,59,115,0.06), 0 2px 4px rgba(31,59,115,0.04);
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
+
+  /* HEADER */
+  .header { background: #FFFFFF; border-bottom: 1px solid var(--border); padding: 0 32px; display: flex; align-items: center; justify-content: space-between; height: 64px; position: sticky; top: 0; z-index: 100; box-shadow: var(--shadow); }
+  .logo { font-family: var(--font-display); font-size: 22px; color: var(--text); letter-spacing: -0.5px; }
+  .logo span { color: #1F3B73; }
+  .header-date { color: var(--text3); font-size: 12px; font-weight: 300; }
+
+  /* SELECTORS */
+  .selectors-bar { background: #FFFFFF; border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; gap: 16px; align-items: center; flex-wrap: wrap; box-shadow: var(--shadow); }
+  .sel-group { display: flex; flex-direction: column; gap: 4px; }
+  .sel-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); }
+  select { background: var(--card); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 8px 32px 8px 12px; font-family: var(--font-body); font-size: 13px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%231F3B73'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; min-width: 200px; box-shadow: var(--shadow); }
+  select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(31,59,115,0.12); }
+  .badge-tipo { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; }
+  .badge-a { background: rgba(31,59,115,0.1); color: #1F3B73; border: 1px solid rgba(31,59,115,0.25); }
+  .badge-g { background: rgba(5,150,105,0.1); color: var(--green); border: 1px solid rgba(5,150,105,0.25); }
+  .badge-p { background: rgba(217,119,6,0.1); color: var(--gold); border: 1px solid rgba(217,119,6,0.25); }
+
+  /* MAIN */
+  .main { padding: 24px 32px; display: flex; flex-direction: column; gap: 24px; }
+
+  /* KPI CARDS */
+  .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+  .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: var(--shadow); }
+  .kpi-card:hover { box-shadow: var(--shadow-md); border-color: #1F3B73; }
+  .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+  .kpi-card.blue::before  { background: linear-gradient(90deg, #1F3B73, #3D5A8A); }
+  .kpi-card.green::before { background: linear-gradient(90deg, #059669, #34d399); }
+  .kpi-card.gold::before  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+  .kpi-card.orange::before{ background: linear-gradient(90deg, #ea580c, #fb923c); }
+  .kpi-card.red::before   { background: linear-gradient(90deg, #dc2626, #f87171); }
+  .kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+  .kpi-value { font-family: var(--font-display); font-size: 28px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .kpi-sub { font-size: 11px; color: var(--text3); }
+  .kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 20px; opacity: 0.18; }
+
+  /* GRID 2 cols */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+  .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 24px; }
+
+  /* PANEL */
+  .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--card); }
+  .panel-title { font-family: var(--font-display); font-size: 16px; color: var(--text); }
+  .panel-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+  .panel-body { padding: 20px; }
+
+  /* CHART CONTAINERS */
+  .chart-wrap { position: relative; }
+  .chart-wrap canvas { max-height: 220px; }
+  .chart-wrap-lg canvas { max-height: 300px; }
+
+  /* TABLE */
+  .tbl-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead th { background: var(--bg2); padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); position: sticky; top: 0; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid var(--bg3); transition: background 0.15s; }
+  tbody tr:hover { background: var(--card2); }
+  tbody td { padding: 9px 12px; color: var(--text2); }
+  tbody td:first-child { color: var(--text); font-weight: 500; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+  .pill-rv  { background: rgba(31,59,115,0.1);  color: #1F3B73; }
+  .pill-rf  { background: rgba(5,150,105,0.1);  color: #047857; }
+  .pill-mix { background: rgba(217,119,6,0.1);  color: #b45309; }
+  .pill-alt { background: rgba(234,88,12,0.1);  color: #c2410c; }
+  .pill-mm  { background: rgba(124,58,237,0.1); color: #6d28d9; }
+
+  /* PROGRESS BAR */
+  .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .prog-label { width: 130px; font-size: 11px; color: var(--text2); flex-shrink: 0; text-align: right; }
+  .prog-bar-wrap { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+  .prog-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+  .prog-val { width: 45px; font-size: 11px; color: var(--text); text-align: right; flex-shrink: 0; font-weight: 600; }
+
+  /* SCATTER */
+  .scatter-wrap { position: relative; width: 100%; height: 100%; min-height: 260px; }
+  .scatter-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+
+  /* ANALYSIS */
+  .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .alert-card { background: var(--card2); border-radius: 10px; padding: 14px 16px; border-left: 3px solid; border: 1px solid var(--border); border-left-width: 3px; }
+  .alert-card.warn { border-color: var(--orange); background: rgba(234,88,12,0.04); }
+  .alert-card.info { border-color: #1F3B73; background: rgba(31,59,115,0.04); }
+  .alert-card.good { border-color: var(--green);  background: rgba(5,150,105,0.04); }
+  .alert-card.bad  { border-color: var(--red);    background: rgba(220,38,38,0.04); }
+  .alert-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+  .alert-card.warn .alert-title { color: var(--orange); }
+  .alert-card.info .alert-title { color: #1F3B73; }
+  .alert-card.good .alert-title { color: var(--green); }
+  .alert-card.bad  .alert-title { color: var(--red); }
+  .alert-text { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+  /* TABS */
+  .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--card); }
+  .tab { padding: 12px 16px; font-size: 12px; font-weight: 500; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+  .tab.active { color: #1F3B73; border-bottom-color: #1F3B73; }
+  .tab:hover:not(.active) { color: var(--text2); }
+  .tab-content { display: none; padding: 20px; }
+  .tab-content.active { display: block; }
+
+  /* SECTION TITLE */
+  .section-title { font-family: var(--font-display); font-size: 13px; color: var(--text3); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+  /* TOOLTIP */
+  .tooltip-wrap { position: relative; display: inline-block; }
+  .tooltip-icon { width: 14px; height: 14px; border-radius: 50%; background: var(--bg3); color: var(--text3); font-size: 9px; display: inline-flex; align-items: center; justify-content: center; cursor: help; }
+  
+  /* RESPONSIVE */
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+    .grid-4 { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 900px) {
+    .main { padding: 16px; }
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* ANIMATIONS */
+  .fade-in { animation: fadeIn 0.4s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b0bac8; }
+
+  .no-data { color: var(--text3); font-size: 12px; text-align: center; padding: 40px; }
+  
+  .rent-positive { color: #059669; font-weight: 600; }
+  .rent-neutral   { color: #d97706; font-weight: 600; }
+  .risk-high { color: #dc2626; font-weight: 600; }
+  .risk-med  { color: #ea580c; font-weight: 600; }
+  .risk-low  { color: #059669; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Portfolio<span>Intelligence</span></div>
+  <div style="display:flex;align-items:center;gap:20px;">
+    <div id="badge-tipo-header"></div>
+    <div class="header-date">Datos a 31/01/2026</div>
+  </div>
+</div>
+
+<div class="selectors-bar">
+  <div class="sel-group">
+    <div class="sel-label">Tipo de cliente</div>
+    <select id="sel-tipo" onchange="onTipoChange()">
+      <option value="">— Todos los tipos —</option>
+      <option value="A - Asesoramiento">Asesoramiento</option>
+      <option value="G - Gestión">Gestión</option>
+      <option value="P - Partícipe">Partícipe</option>
+    </select>
+  </div>
+  <div class="sel-group">
+    <div class="sel-label">Grupo</div>
+    <select id="sel-grupo" onchange="onGrupoChange()">
+      <option value="">— Todos los grupos —</option>
+    </select>
+  </div>
+  <div class="sel-group">
+    <div class="sel-label">Cliente / Cartera</div>
+    <select id="sel-cliente" onchange="onClienteChange()">
+      <option value="">— Selecciona cliente —</option>
+    </select>
+  </div>
+  <div id="info-codigo" style="color:var(--text3);font-size:11px;margin-top:18px;"></div>
+</div>
+
+<div class="main" id="main-content">
+  <div class="no-data" style="padding:80px;">
+    <div style="font-size:40px;margin-bottom:16px;">📊</div>
+    <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Selecciona un cliente</div>
+    <div style="color:var(--text3);">Usa los filtros superiores para visualizar el dashboard de cartera</div>
+  </div>
+</div>
+
+<script>
+const RAW = {"clientes":[{"tipo":"A - Asesoramiento","grupo":13495,"codigo":"0134950","nombre":"Cliente 1","cartera":{"total_fondos":166066.74,"rent_esp":9.99,"vol":15.86,"sharpe":0.44,"var95":26.09,"fondos":[{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":54245.82,"rent_esp":9.5,"vol":14.5,"peso":32.67},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":47390.94,"rent_esp":9.5,"vol":14.5,"peso":28.54},{"isin":"IE00BDR0R800","nombre":"Ashoka WhiteOak India Opps F EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":34664.2,"rent_esp":11.0,"vol":18.0,"peso":20.87},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":29765.78,"rent_esp":10.5,"vol":18.0,"peso":17.92}],"categoria":{"patrimonio":170884.06,"cc":2.82,"alternativos":0,"mm":3.76,"no_considerar":0,"rf":0.02,"rv":190.58},"divisa":{"cc":2.82,"euro":49.91,"dolar":43.4,"otros":3.87},"zona":{"cc":2.82,"asia_em":20.76,"asia_dev":0.95,"europa":15.35,"japon":1.68,"no_cons":0,"uk":6.96,"norte_am":51.48},"sector":{"cc":2.82,"sin_esp":0,"materiales":3.02,"cons_ciclico":8.69,"energia":3.26,"financiero":21.34,"real_estate":0.62,"salud":12.41,"industriales":20.19,"tecnologia":17.44,"telecom":6.52,"utilities":0.84,"cons_defensivo":2.83}}},{"tipo":"A - Asesoramiento","grupo":13497,"codigo":"0134970","nombre":"Cliente 2","cartera":{"total_fondos":344052.2,"rent_esp":8.28,"vol":12.55,"sharpe":0.42,"var95":20.64,"fondos":[{"isin":"LU1720111282","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel RE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":18355.09,"rent_esp":6.0,"vol":7.0,"peso":5.33},{"isin":"IE000MI53C66","nombre":"Man GlInGd Opports D H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":28174.52,"rent_esp":4.2,"vol":3.5,"peso":8.19},{"isin":"LU1585265066","nombre":"Tikehau Short Duration R EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":27969.69,"rent_esp":3.8,"vol":1.5,"peso":8.13},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":34690.28,"rent_esp":8.0,"vol":13.5,"peso":10.08},{"isin":"LU1670707527","nombre":"M&G (Lux) Eurp Strat Val A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":28047.13,"rent_esp":8.0,"vol":13.5,"peso":8.15},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":39972.07,"rent_esp":9.0,"vol":14.0,"peso":11.62},{"isin":"LU1295552621","nombre":"Capital Group New Pers (LUX) Bh-EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":38414.63,"rent_esp":9.0,"vol":14.0,"peso":11.17},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":40355.97,"rent_esp":9.5,"vol":14.5,"peso":11.73},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":18882.97,"rent_esp":9.5,"vol":14.5,"peso":5.49},{"isin":"IE00BDR0R800","nombre":"Ashoka WhiteOak India Opps F EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":32354.96,"rent_esp":11.0,"vol":18.0,"peso":9.4},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":36834.89,"rent_esp":10.5,"vol":18.0,"peso":10.71}],"categoria":{"patrimonio":344752.85,"cc":0.2,"alternativos":0.06,"mm":6.18,"no_considerar":0,"rf":43.3,"rv":150.06},"divisa":{"cc":0.2,"euro":63.91,"dolar":27.52,"otros":8.36},"zona":{"cc":0.2,"asia_em":10.18,"asia_dev":1.38,"europa":23.95,"japon":0.79,"no_cons":21.9,"uk":6.68,"norte_am":34.91},"sector":{"cc":0.2,"sin_esp":21.61,"materiales":2.77,"cons_ciclico":7.25,"energia":1.97,"financiero":15.06,"real_estate":0.66,"salud":10.66,"industriales":15.15,"tecnologia":13.21,"telecom":4.69,"utilities":1.24,"cons_defensivo":5.52}}},{"tipo":"A - Asesoramiento","grupo":13498,"codigo":"0134980","nombre":"Cliente 3","cartera":{"total_fondos":661228.43,"rent_esp":6.01,"vol":7.35,"sharpe":0.41,"var95":12.08,"fondos":[{"isin":"IE000MI53C66","nombre":"Man GlInGd Opports D H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":36441.24,"rent_esp":4.2,"vol":3.5,"peso":5.51},{"isin":"LU0995119665","nombre":"Schroder ISF EURO Crdt Convct A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":33886.36,"rent_esp":4.2,"vol":3.5,"peso":5.12},{"isin":"FI0008800511","nombre":"Evli Short Corporate Bond B","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":100829.08,"rent_esp":3.8,"vol":1.5,"peso":15.25},{"isin":"LU1585264176","nombre":"Tikehau Subfin RS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":40941.79,"rent_esp":5.5,"vol":6.0,"peso":6.19},{"isin":"IE00BD2ZKT29","nombre":"Principal Finisterre Unc EMFI A HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":38456.99,"rent_esp":5.5,"vol":8.0,"peso":5.82},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":36942.94,"rent_esp":5.5,"vol":8.0,"peso":5.59},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":39079.78,"rent_esp":6.5,"vol":7.5,"peso":5.91},{"isin":"ES0175437005","nombre":"Dunas Valor Prudente R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":100686.14,"rent_esp":4.8,"vol":4.0,"peso":15.23},{"isin":"LU2305832698","nombre":"Invesco Asian Equity A EURH Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":27835.27,"rent_esp":9.0,"vol":16.0,"peso":4.21},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":20125.89,"rent_esp":9.0,"vol":14.0,"peso":3.04},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":20495.21,"rent_esp":9.5,"vol":14.5,"peso":3.1},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":39919.35,"rent_esp":9.5,"vol":14.5,"peso":6.04},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":22373.21,"rent_esp":9.5,"vol":14.5,"peso":3.38},{"isin":"LU1245471567","nombre":"FvS Multi Asset Growth ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Agresivos","valor":53869.32,"rent_esp":7.5,"vol":11.0,"peso":8.15},{"isin":"LU0599946893","nombre":"DWS Concept Kaldemorgen EUR LC","instrumento":"Fondo mixto","agrupacion":"Mixtos Flexibles","valor":49345.86,"rent_esp":6.0,"vol":8.0,"peso":7.46}],"categoria":{"patrimonio":736615.24,"cc":10.23,"alternativos":2.72,"mm":3,"no_considerar":0,"rf":124.5,"rv":49.3},"divisa":{"cc":10.23,"euro":71.92,"dolar":13.95,"otros":3.89},"zona":{"cc":10.23,"asia_em":2.36,"asia_dev":2.36,"europa":8.61,"japon":0.79,"no_cons":58.09,"uk":1.73,"norte_am":15.82},"sector":{"cc":10.23,"sin_esp":58,"materiales":0.76,"cons_ciclico":2.63,"energia":0.44,"financiero":5.76,"real_estate":0.22,"salud":3.97,"industriales":4.58,"tecnologia":7.45,"telecom":2.43,"utilities":0.71,"cons_defensivo":2.81}}},{"tipo":"A - Asesoramiento","grupo":13498,"codigo":"0134981","nombre":"Cliente 4","cartera":{"total_fondos":598583.02,"rent_esp":7.91,"vol":11.6,"sharpe":0.42,"var95":19.09,"fondos":[{"isin":"LU0646913847","nombre":"Arcano European Income ESG Sel AA","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":161759.71,"rent_esp":6.0,"vol":7.0,"peso":27.02},{"isin":"IE000MI53C66","nombre":"Man GlInGd Opports D H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":34948.45,"rent_esp":4.2,"vol":3.5,"peso":5.84},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":27155.58,"rent_esp":5.5,"vol":8.0,"peso":4.54},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":50217.07,"rent_esp":8.0,"vol":13.5,"peso":8.39},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":33511.13,"rent_esp":9.0,"vol":14.0,"peso":5.6},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":35119.58,"rent_esp":9.5,"vol":14.5,"peso":5.87},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":56760.53,"rent_esp":9.5,"vol":14.5,"peso":9.48},{"isin":"LU0203975437","nombre":"Robeco BP Global Premium Eqs D EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":33990.45,"rent_esp":9.5,"vol":14.5,"peso":5.68},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":44078.45,"rent_esp":9.5,"vol":14.5,"peso":7.36},{"isin":"IE00BDR0R800","nombre":"Ashoka WhiteOak India Opps F EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":33417.41,"rent_esp":11.0,"vol":18.0,"peso":5.58},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":42319.63,"rent_esp":10.5,"vol":18.0,"peso":7.07},{"isin":"LU1245471567","nombre":"FvS Multi Asset Growth ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Agresivos","valor":45305.03,"rent_esp":7.5,"vol":11.0,"peso":7.57}],"categoria":{"patrimonio":598917.65,"cc":0.06,"alternativos":1.48,"mm":5.4,"no_considerar":0,"rf":78.14,"rv":114.86},"divisa":{"cc":0.06,"euro":64.22,"dolar":26.91,"otros":8.81},"zona":{"cc":0.06,"asia_em":6.27,"asia_dev":0.99,"europa":17.92,"japon":1.41,"no_cons":37.45,"uk":4.92,"norte_am":30.98},"sector":{"cc":0.06,"sin_esp":37.38,"materiales":1.85,"cons_ciclico":5.38,"energia":1.98,"financiero":12.72,"real_estate":0.38,"salud":8.83,"industriales":11.04,"tecnologia":11.07,"telecom":3.61,"utilities":1.03,"cons_defensivo":4.69}}},{"tipo":"A - Asesoramiento","grupo":13499,"codigo":"0134990","nombre":"Cliente 5","cartera":{"total_fondos":495293.2,"rent_esp":6.66,"vol":9.19,"sharpe":0.4,"var95":15.12,"fondos":[{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":52258.96,"rent_esp":5.5,"vol":6.0,"peso":10.55},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":25004.15,"rent_esp":4.5,"vol":4.5,"peso":5.05},{"isin":"IE00BD2ZKT29","nombre":"Principal Finisterre Unc EMFI A HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":26906.01,"rent_esp":5.5,"vol":8.0,"peso":5.43},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":25734.23,"rent_esp":5.5,"vol":8.0,"peso":5.2},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":55584.26,"rent_esp":6.5,"vol":7.5,"peso":11.22},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":29505.52,"rent_esp":8.0,"vol":13.5,"peso":5.96},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":37591.36,"rent_esp":9.0,"vol":14.0,"peso":7.59},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":37053.29,"rent_esp":9.5,"vol":14.5,"peso":7.48},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":37880.86,"rent_esp":9.5,"vol":14.5,"peso":7.65},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":22600.27,"rent_esp":10.5,"vol":18.0,"peso":4.56},{"isin":"LU1245471054","nombre":"FvS Multi Asset Balanced ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":145174.29,"rent_esp":5.0,"vol":6.0,"peso":29.31}],"categoria":{"patrimonio":495293.17,"cc":0,"alternativos":5.42,"mm":7,"no_considerar":0,"rf":98.04,"rv":89.54},"divisa":{"cc":0,"euro":57.82,"dolar":30.45,"otros":11.73},"zona":{"cc":0,"asia_em":0.91,"asia_dev":0.58,"europa":18.67,"japon":0.89,"no_cons":37.5,"uk":4.63,"norte_am":36.81},"sector":{"cc":0,"sin_esp":37.45,"materiales":1.03,"cons_ciclico":4.84,"energia":0.7,"financiero":10.05,"real_estate":0.16,"salud":8.97,"industriales":10.51,"tecnologia":14.49,"telecom":3.47,"utilities":0.5,"cons_defensivo":7.82}}},{"tipo":"A - Asesoramiento","grupo":13499,"codigo":"0134991","nombre":"Cliente 6","cartera":{"total_fondos":29550.87,"rent_esp":8.67,"vol":12.72,"sharpe":0.45,"var95":20.93,"fondos":[{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":6991.13,"rent_esp":6.5,"vol":7.5,"peso":23.66},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":7273.57,"rent_esp":9.0,"vol":14.0,"peso":24.61},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":7207.82,"rent_esp":9.5,"vol":14.5,"peso":24.39},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":8078.35,"rent_esp":9.5,"vol":14.5,"peso":27.34}],"categoria":{"patrimonio":30815.01,"cc":4.1,"alternativos":0,"mm":3,"no_considerar":0,"rf":45.38,"rv":143.42},"divisa":{"cc":4.1,"euro":74.98,"dolar":17.37,"otros":3.54},"zona":{"cc":4.1,"asia_em":1.22,"asia_dev":2.44,"europa":19.04,"japon":2.81,"no_cons":22.69,"uk":6.96,"norte_am":40.74},"sector":{"cc":4.1,"sin_esp":22.69,"materiales":1.93,"cons_ciclico":4.95,"energia":2.53,"financiero":14.71,"real_estate":0.17,"salud":10.26,"industriales":12.15,"tecnologia":12.45,"telecom":4.06,"utilities":1.58,"cons_defensivo":8.42}}},{"tipo":"A - Asesoramiento","grupo":13500,"codigo":"0135000","nombre":"Cliente 7","cartera":{"total_fondos":1266661.34,"rent_esp":7.45,"vol":10.89,"sharpe":0.41,"var95":17.91,"fondos":[{"isin":"LU0423950210","nombre":"BNPP InstiCash EUR 3M Std VNAV Cl Cap","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":110202.25,"rent_esp":3.2,"vol":0.3,"peso":8.7},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":65637.65,"rent_esp":4.5,"vol":4.5,"peso":5.18},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":66730.8,"rent_esp":5.5,"vol":8.0,"peso":5.27},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":101597.3,"rent_esp":6.5,"vol":7.5,"peso":8.02},{"isin":"LU1378879248","nombre":"MS INVF Asia Opportunity AH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":150880.74,"rent_esp":9.0,"vol":16.0,"peso":11.91},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":108963.41,"rent_esp":8.0,"vol":13.5,"peso":8.6},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":130654.57,"rent_esp":9.0,"vol":14.0,"peso":10.31},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":138196.11,"rent_esp":9.5,"vol":14.5,"peso":10.91},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":136619.73,"rent_esp":9.5,"vol":14.5,"peso":10.79},{"isin":"LU1245471567","nombre":"FvS Multi Asset Growth ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Agresivos","valor":135734.05,"rent_esp":7.5,"vol":11.0,"peso":10.72},{"isin":"LU0599946893","nombre":"DWS Concept Kaldemorgen EUR LC","instrumento":"Fondo mixto","agrupacion":"Mixtos Flexibles","valor":121444.73,"rent_esp":6.0,"vol":8.0,"peso":9.59}],"categoria":{"patrimonio":1267660.7,"cc":0.08,"alternativos":3.7,"mm":7.3,"no_considerar":0,"rf":66.7,"rv":122.14},"divisa":{"cc":0.08,"euro":62.34,"dolar":28.93,"otros":8.65},"zona":{"cc":0.08,"asia_em":9.85,"asia_dev":3.36,"europa":21.29,"japon":1.03,"no_cons":27.23,"uk":3.98,"norte_am":33.17},"sector":{"cc":0.08,"sin_esp":27.15,"materiales":1.05,"cons_ciclico":8.97,"energia":0.69,"financiero":13.12,"real_estate":0.9,"salud":7.5,"industriales":10.89,"tecnologia":16.15,"telecom":6.18,"utilities":1.23,"cons_defensivo":6.1}}},{"tipo":"A - Asesoramiento","grupo":13501,"codigo":"0135010","nombre":"Cliente 8","cartera":{"total_fondos":462444.6,"rent_esp":7.6,"vol":10.97,"sharpe":0.42,"var95":18.05,"fondos":[{"isin":"DE000A2T0VU5","nombre":"Xtrackers IE Physical Gold ETC","instrumento":"ETC (Exchange Traded Commodity)","agrupacion":"Alternativos","valor":45881.55,"rent_esp":5.0,"vol":5.0,"peso":9.92},{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":21569.6,"rent_esp":4.2,"vol":3.5,"peso":4.66},{"isin":"IE00B8J38129","nombre":"Algebris Financial Credit R EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":25202.33,"rent_esp":5.5,"vol":6.0,"peso":5.45},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":21179.44,"rent_esp":4.5,"vol":4.5,"peso":4.58},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":25877.89,"rent_esp":6.5,"vol":7.5,"peso":5.6},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":81965.53,"rent_esp":8.0,"vol":13.5,"peso":17.72},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":50553.54,"rent_esp":9.5,"vol":14.5,"peso":10.93},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":53009.55,"rent_esp":9.5,"vol":14.5,"peso":11.46},{"isin":"LU0552385618","nombre":"MS INVF Global Opportunity AH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":81765.18,"rent_esp":9.5,"vol":14.5,"peso":17.68},{"isin":"LU1245471567","nombre":"FvS Multi Asset Growth ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Agresivos","valor":30407.45,"rent_esp":7.5,"vol":11.0,"peso":6.58},{"isin":"LU0599946893","nombre":"DWS Concept Kaldemorgen EUR LC","instrumento":"Fondo mixto","agrupacion":"Mixtos Flexibles","valor":25032.54,"rent_esp":6.0,"vol":8.0,"peso":5.41}],"categoria":{"patrimonio":462358.8,"cc":-0.02,"alternativos":21.66,"mm":8.16,"no_considerar":0,"rf":48.04,"rv":122.18},"divisa":{"cc":-0.02,"euro":64.51,"dolar":25.76,"otros":9.76},"zona":{"cc":-0.02,"asia_em":2.42,"asia_dev":1.9,"europa":26.44,"japon":1.14,"no_cons":31.66,"uk":3.69,"norte_am":32.76},"sector":{"cc":-0.02,"sin_esp":30.22,"materiales":1.27,"cons_ciclico":10.95,"energia":1.03,"financiero":12.99,"real_estate":0.48,"salud":5.57,"industriales":11.07,"tecnologia":15.15,"telecom":7.25,"utilities":1.36,"cons_defensivo":2.68}}},{"tipo":"A - Asesoramiento","grupo":13502,"codigo":"0135020","nombre":"Cliente 9","cartera":{"total_fondos":422990.52,"rent_esp":6.97,"vol":9.76,"sharpe":0.41,"var95":16.05,"fondos":[{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":24020.19,"rent_esp":4.2,"vol":3.5,"peso":5.68},{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":46979.62,"rent_esp":5.5,"vol":6.0,"peso":11.11},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":49186.34,"rent_esp":6.5,"vol":7.5,"peso":11.63},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":51898.75,"rent_esp":8.0,"vol":13.5,"peso":12.27},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":32044.15,"rent_esp":9.0,"vol":14.0,"peso":7.58},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":67438.14,"rent_esp":9.5,"vol":14.5,"peso":15.94},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":18661.85,"rent_esp":10.5,"vol":18.0,"peso":4.41},{"isin":"LU0599946893","nombre":"DWS Concept Kaldemorgen EUR LC","instrumento":"Fondo mixto","agrupacion":"Mixtos Flexibles","valor":66824.66,"rent_esp":6.0,"vol":8.0,"peso":15.8},{"isin":"LU1245471054","nombre":"FvS Multi Asset Balanced ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":65936.82,"rent_esp":5.0,"vol":6.0,"peso":15.59}],"categoria":{"patrimonio":422990.52,"cc":0,"alternativos":5.96,"mm":8.94,"no_considerar":0,"rf":81.66,"rv":103.44},"divisa":{"cc":0,"euro":65.12,"dolar":25.04,"otros":9.85},"zona":{"cc":0,"asia_em":1.19,"asia_dev":1.72,"europa":27.08,"japon":1.57,"no_cons":28.53,"uk":3.76,"norte_am":36.14},"sector":{"cc":0,"sin_esp":28.41,"materiales":1.59,"cons_ciclico":6.45,"energia":1.2,"financiero":12.31,"real_estate":0.6,"salud":10.67,"industriales":10.95,"tecnologia":14.94,"telecom":4.6,"utilities":1.88,"cons_defensivo":6.4}}},{"tipo":"A - Asesoramiento","grupo":13503,"codigo":"0135030","nombre":"Cliente 10","cartera":{"total_fondos":654995.83,"rent_esp":6.87,"vol":9.35,"sharpe":0.41,"var95":15.38,"fondos":[{"isin":"LU0646913847","nombre":"Arcano European Income ESG Sel AA","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":132728.69,"rent_esp":6.0,"vol":7.0,"peso":20.26},{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":41685.56,"rent_esp":4.2,"vol":3.5,"peso":6.36},{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":42050.25,"rent_esp":5.5,"vol":6.0,"peso":6.42},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":40433.79,"rent_esp":4.5,"vol":4.5,"peso":6.17},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":44111.24,"rent_esp":6.5,"vol":7.5,"peso":6.73},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":59910.86,"rent_esp":8.0,"vol":13.5,"peso":9.15},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":59977.11,"rent_esp":9.0,"vol":14.0,"peso":9.16},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":39739.4,"rent_esp":9.5,"vol":14.5,"peso":6.07},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":41586.84,"rent_esp":9.5,"vol":14.5,"peso":6.35},{"isin":"LU1245471567","nombre":"FvS Multi Asset Growth ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Agresivos","valor":78541.27,"rent_esp":7.5,"vol":11.0,"peso":11.99},{"isin":"LU0599946893","nombre":"DWS Concept Kaldemorgen EUR LC","instrumento":"Fondo mixto","agrupacion":"Mixtos Flexibles","valor":74230.82,"rent_esp":6.0,"vol":8.0,"peso":11.33}],"categoria":{"patrimonio":654995.29,"cc":0,"alternativos":4.54,"mm":6.54,"no_considerar":0,"rf":106.18,"rv":82.76},"divisa":{"cc":0,"euro":59.18,"dolar":31.14,"otros":9.68},"zona":{"cc":0,"asia_em":0.74,"asia_dev":1.13,"europa":21.39,"japon":0.88,"no_cons":46.04,"uk":3.63,"norte_am":26.2},"sector":{"cc":0,"sin_esp":45.96,"materiales":1.06,"cons_ciclico":4.1,"energia":0.55,"financiero":9.56,"real_estate":0.4,"salud":7.34,"industriales":9.44,"tecnologia":11.31,"telecom":3.65,"utilities":1.18,"cons_defensivo":5.47}}},{"tipo":"A - Asesoramiento","grupo":13504,"codigo":"0135040","nombre":"Cliente 11","cartera":{"total_fondos":626933.98,"rent_esp":6.26,"vol":8.22,"sharpe":0.4,"var95":13.53,"fondos":[{"isin":"LU1914597502","nombre":"MFS Meridian Euro Credit A1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":33520.14,"rent_esp":4.2,"vol":3.5,"peso":5.35},{"isin":"FI0008800511","nombre":"Evli Short Corporate Bond B","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":33615.59,"rent_esp":3.8,"vol":1.5,"peso":5.36},{"isin":"LU1944396289","nombre":"Vontobel EM Corporate Bond H EUR Hdg","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda Corporativa EM","valor":2.75,"rent_esp":5.8,"vol":6.5,"peso":0.0},{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":54861.34,"rent_esp":5.5,"vol":6.0,"peso":8.75},{"isin":"LU0284393930","nombre":"DNCA Invest Credit Conviction A EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":33725.54,"rent_esp":4.5,"vol":4.5,"peso":5.38},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":28076.71,"rent_esp":4.5,"vol":4.5,"peso":4.48},{"isin":"IE00BD2ZKT29","nombre":"Principal Finisterre Unc EMFI A HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":28864.06,"rent_esp":5.5,"vol":8.0,"peso":4.6},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":27560.38,"rent_esp":5.5,"vol":8.0,"peso":4.4},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":57514.92,"rent_esp":6.5,"vol":7.5,"peso":9.17},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":29137.28,"rent_esp":8.0,"vol":13.5,"peso":4.65},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":38572.88,"rent_esp":9.0,"vol":14.0,"peso":6.15},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":38420.47,"rent_esp":9.5,"vol":14.5,"peso":6.13},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":46003.75,"rent_esp":9.5,"vol":14.5,"peso":7.34},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":23077.73,"rent_esp":10.5,"vol":18.0,"peso":3.68},{"isin":"LU1245471054","nombre":"FvS Multi Asset Balanced ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":153980.44,"rent_esp":5.0,"vol":6.0,"peso":24.56}],"categoria":{"patrimonio":626933.99,"cc":0,"alternativos":4.54,"mm":5.78,"no_considerar":0,"rf":114.38,"rv":75.3},"divisa":{"cc":0,"euro":64.31,"dolar":26.22,"otros":9.48},"zona":{"cc":0,"asia_em":0.78,"asia_dev":0.51,"europa":15.39,"japon":0.8,"no_cons":47.53,"uk":3.81,"norte_am":31.18},"sector":{"cc":0,"sin_esp":47.49,"materiales":0.86,"cons_ciclico":4.14,"energia":0.6,"financiero":8.42,"real_estate":0.14,"salud":7.48,"industriales":8.7,"tecnologia":12.25,"telecom":2.96,"utilities":0.44,"cons_defensivo":6.52}}},{"tipo":"A - Asesoramiento","grupo":13505,"codigo":"0135050","nombre":"Cliente 12","cartera":{"total_fondos":521158.93,"rent_esp":6.67,"vol":9.21,"sharpe":0.4,"var95":15.16,"fondos":[{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":54215.83,"rent_esp":5.5,"vol":6.0,"peso":10.4},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":26125.51,"rent_esp":4.5,"vol":4.5,"peso":5.01},{"isin":"IE00BD2ZKT29","nombre":"Principal Finisterre Unc EMFI A HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":28561.74,"rent_esp":5.5,"vol":8.0,"peso":5.48},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":27240.88,"rent_esp":5.5,"vol":8.0,"peso":5.23},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":57072.62,"rent_esp":6.5,"vol":7.5,"peso":10.95},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":30946.51,"rent_esp":8.0,"vol":13.5,"peso":5.94},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":37917.36,"rent_esp":9.0,"vol":14.0,"peso":7.28},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":38322.18,"rent_esp":9.5,"vol":14.5,"peso":7.35},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":45472.76,"rent_esp":9.5,"vol":14.5,"peso":8.73},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":22373.53,"rent_esp":10.5,"vol":18.0,"peso":4.29},{"isin":"LU1245471054","nombre":"FvS Multi Asset Balanced ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":152910.01,"rent_esp":5.0,"vol":6.0,"peso":29.34}],"categoria":{"patrimonio":521158.96,"cc":0,"alternativos":5.44,"mm":7,"no_considerar":0,"rf":97.32,"rv":90.24},"divisa":{"cc":0,"euro":57.31,"dolar":30.91,"otros":11.79},"zona":{"cc":0,"asia_em":0.92,"asia_dev":0.61,"europa":18.68,"japon":0.95,"no_cons":37.13,"uk":4.6,"norte_am":37.11},"sector":{"cc":0,"sin_esp":37.07,"materiales":1.05,"cons_ciclico":4.96,"energia":0.73,"financiero":10.14,"real_estate":0.17,"salud":8.94,"industriales":10.44,"tecnologia":14.63,"telecom":3.56,"utilities":0.54,"cons_defensivo":7.78}}},{"tipo":"A - Asesoramiento","grupo":13506,"codigo":"0135060","nombre":"Cliente 13","cartera":{"total_fondos":524769.53,"rent_esp":6.65,"vol":9.17,"sharpe":0.4,"var95":15.09,"fondos":[{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":55020.27,"rent_esp":5.5,"vol":6.0,"peso":10.48},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":26611.4,"rent_esp":4.5,"vol":4.5,"peso":5.07},{"isin":"IE00BD2ZKT29","nombre":"Principal Finisterre Unc EMFI A HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":29329.43,"rent_esp":5.5,"vol":8.0,"peso":5.59},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":27911.24,"rent_esp":5.5,"vol":8.0,"peso":5.32},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":57877.33,"rent_esp":6.5,"vol":7.5,"peso":11.03},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":31834.38,"rent_esp":8.0,"vol":13.5,"peso":6.07},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":39226.35,"rent_esp":9.0,"vol":14.0,"peso":7.47},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":38667.1,"rent_esp":9.5,"vol":14.5,"peso":7.37},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":40239.52,"rent_esp":9.5,"vol":14.5,"peso":7.67},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":23267.26,"rent_esp":10.5,"vol":18.0,"peso":4.43},{"isin":"LU1245471054","nombre":"FvS Multi Asset Balanced ET","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":154785.25,"rent_esp":5.0,"vol":6.0,"peso":29.5}],"categoria":{"patrimonio":524769.46,"cc":0,"alternativos":5.46,"mm":7.04,"no_considerar":0,"rf":98.28,"rv":89.22},"divisa":{"cc":0,"euro":57.79,"dolar":30.39,"otros":11.82},"zona":{"cc":0,"asia_em":0.91,"asia_dev":0.58,"europa":18.77,"japon":0.9,"no_cons":37.55,"uk":4.64,"norte_am":36.66},"sector":{"cc":0,"sin_esp":37.49,"materiales":1.04,"cons_ciclico":4.83,"energia":0.7,"financiero":10.05,"real_estate":0.16,"salud":8.96,"industriales":10.47,"tecnologia":14.47,"telecom":3.48,"utilities":0.51,"cons_defensivo":7.83}}},{"tipo":"A - Asesoramiento","grupo":13508,"codigo":"0135081","nombre":"Cliente 14","cartera":{"total_fondos":1714231.27,"rent_esp":5.0,"vol":6.0,"sharpe":0.33,"var95":9.87,"fondos":[{"isin":"LU0329591480","nombre":"BGF Global Allocation D2 EUR Hedged","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":594313.73,"rent_esp":5.0,"vol":6.0,"peso":34.67},{"isin":"LU0523293024","nombre":"BGF Global Allocation D2","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":1119917.54,"rent_esp":5.0,"vol":6.0,"peso":65.33}],"categoria":{"patrimonio":1714231.27,"cc":0,"alternativos":12.8,"mm":-34.4,"no_considerar":0,"rf":101.86,"rv":119.74},"divisa":{"cc":0,"euro":43.42,"dolar":38.06,"otros":18.52},"zona":{"cc":0,"asia_em":2.06,"asia_dev":2.66,"europa":10.18,"japon":2.27,"no_cons":1.87,"uk":3.71,"norte_am":77.24},"sector":{"cc":0,"sin_esp":0,"materiales":2.77,"cons_ciclico":11.5,"energia":3.76,"financiero":16.75,"real_estate":0.4,"salud":10.73,"industriales":10.33,"tecnologia":27.55,"telecom":9.45,"utilities":2.15,"cons_defensivo":4.61}}},{"tipo":"A - Asesoramiento","grupo":13514,"codigo":"0135140","nombre":"Cliente 15","cartera":{"total_fondos":86919.71,"rent_esp":4.32,"vol":3.1,"sharpe":0.43,"var95":5.1,"fondos":[{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":26251.11,"rent_esp":4.2,"vol":3.5,"peso":30.2},{"isin":"LU1585265066","nombre":"Tikehau Short Duration R EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":26014.76,"rent_esp":3.8,"vol":1.5,"peso":29.93},{"isin":"ES0175414012","nombre":"Dunas Valor Equilibrado R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":18403.51,"rent_esp":4.8,"vol":4.0,"peso":21.17},{"isin":"ES0175437005","nombre":"Dunas Valor Prudente R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":16250.33,"rent_esp":4.8,"vol":4.0,"peso":18.7}],"categoria":{"patrimonio":86919.18,"cc":0,"alternativos":0,"mm":0,"no_considerar":0,"rf":200,"rv":0},"divisa":{"cc":0,"euro":100.2,"dolar":3.83,"otros":-4.03},"zona":{"cc":0,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":100,"uk":0,"norte_am":0},"sector":{"cc":0,"sin_esp":100,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"A - Asesoramiento","grupo":13515,"codigo":"0135150","nombre":"Cliente 16","cartera":{"total_fondos":152763.31,"rent_esp":6.23,"vol":7.49,"sharpe":0.43,"var95":12.33,"fondos":[{"isin":"LU0423950210","nombre":"BNPP InstiCash EUR 3M Std VNAV Cl Cap","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":50069.22,"rent_esp":3.2,"vol":0.3,"peso":32.78},{"isin":"LU0995119665","nombre":"Schroder ISF EURO Crdt Convct A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":7512.31,"rent_esp":4.2,"vol":3.5,"peso":4.92},{"isin":"LU1585264176","nombre":"Tikehau Subfin RS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":10669,"rent_esp":5.5,"vol":6.0,"peso":6.98},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":5808.82,"rent_esp":5.5,"vol":8.0,"peso":3.8},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":10796.22,"rent_esp":6.5,"vol":7.5,"peso":7.07},{"isin":"ES0175414012","nombre":"Dunas Valor Equilibrado R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":10638.18,"rent_esp":4.8,"vol":4.0,"peso":6.96},{"isin":"LU0289214545","nombre":"JPM Europe Equity Plus C perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":11305.5,"rent_esp":8.0,"vol":13.5,"peso":7.4},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":6652.24,"rent_esp":9.0,"vol":14.0,"peso":4.35},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":7011.05,"rent_esp":9.5,"vol":14.5,"peso":4.59},{"isin":"LU0157178582","nombre":"JPM Global Select Equity A (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":7072.61,"rent_esp":9.5,"vol":14.5,"peso":4.63},{"isin":"IE00BDR0R800","nombre":"Ashoka WhiteOak India Opps F EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":8734.19,"rent_esp":11.0,"vol":18.0,"peso":5.72},{"isin":"LU0320896664","nombre":"Robeco BP US Premium Equities DH €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":9828.94,"rent_esp":10.0,"vol":14.5,"peso":6.43},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":6665.03,"rent_esp":10.5,"vol":18.0,"peso":4.36}],"categoria":{"patrimonio":152764.2,"cc":0,"alternativos":0,"mm":2.88,"no_considerar":0,"rf":125.08,"rv":72.04},"divisa":{"cc":0,"euro":82.04,"dolar":15.99,"otros":1.97},"zona":{"cc":0,"asia_em":6.07,"asia_dev":0.36,"europa":8.98,"japon":0.24,"no_cons":62.82,"uk":1.86,"norte_am":19.66},"sector":{"cc":0,"sin_esp":62.51,"materiales":0.9,"cons_ciclico":3.61,"energia":1.06,"financiero":8.05,"real_estate":0.34,"salud":4.92,"industriales":6.49,"tecnologia":7.22,"telecom":2.39,"utilities":0.46,"cons_defensivo":2.06}}},{"tipo":"A - Asesoramiento","grupo":13522,"codigo":"0135220","nombre":"Cliente 17","cartera":{"total_fondos":112633.58,"rent_esp":9.47,"vol":15.35,"sharpe":0.42,"var95":25.25,"fondos":[{"isin":"LU2305832698","nombre":"Invesco Asian Equity A EURH Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":15163.38,"rent_esp":9.0,"vol":16.0,"peso":13.46},{"isin":"LU0289089384","nombre":"JPM Europe Equity Plus A perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":15166.94,"rent_esp":8.0,"vol":13.5,"peso":13.47},{"isin":"IE00BGHQF631","nombre":"Guinness Global Equity Income C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":11897.33,"rent_esp":9.0,"vol":14.0,"peso":10.56},{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":13166.04,"rent_esp":9.5,"vol":14.5,"peso":11.69},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":14004.53,"rent_esp":9.5,"vol":14.5,"peso":12.43},{"isin":"LU1549401203","nombre":"Robeco BP Global Premium Eqs DH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":16392.64,"rent_esp":9.5,"vol":14.5,"peso":14.55},{"isin":"IE00BDR0R800","nombre":"Ashoka WhiteOak India Opps F EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":11669.38,"rent_esp":11.0,"vol":18.0,"peso":10.36},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":15173.34,"rent_esp":10.5,"vol":18.0,"peso":13.47}],"categoria":{"patrimonio":122634.9,"cc":8.16,"alternativos":0.02,"mm":6.56,"no_considerar":0,"rf":0.12,"rv":177},"divisa":{"cc":8.16,"euro":60.04,"dolar":24.47,"otros":7.33},"zona":{"cc":8.16,"asia_em":16.76,"asia_dev":6.56,"europa":21.13,"japon":1.41,"no_cons":0.38,"uk":5.92,"norte_am":39.68},"sector":{"cc":8.16,"sin_esp":0,"materiales":2.73,"cons_ciclico":8.87,"energia":2.73,"financiero":19.16,"real_estate":0.78,"salud":11.07,"industriales":15.7,"tecnologia":17.54,"telecom":6.14,"utilities":1.49,"cons_defensivo":5.63}}},{"tipo":"A - Asesoramiento","grupo":13523,"codigo":"0135230","nombre":"Cliente 18","cartera":{"total_fondos":24880.11,"rent_esp":9.72,"vol":15.28,"sharpe":0.44,"var95":25.14,"fondos":[{"isin":"IE00BLF9YH30","nombre":"BlackRock Global Uncons Eq A EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":10907.07,"rent_esp":9.5,"vol":14.5,"peso":43.84},{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":8407.15,"rent_esp":9.5,"vol":14.5,"peso":33.79},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":5565.89,"rent_esp":10.5,"vol":18.0,"peso":22.37}],"categoria":{"patrimonio":24880.11,"cc":0,"alternativos":0,"mm":2.84,"no_considerar":0,"rf":0.04,"rv":197.12},"divisa":{"cc":0,"euro":62.74,"dolar":31.92,"otros":5.34},"zona":{"cc":0,"asia_em":1.52,"asia_dev":1.5,"europa":11.17,"japon":1.76,"no_cons":0,"uk":3.67,"norte_am":80.39},"sector":{"cc":0,"sin_esp":0,"materiales":0.79,"cons_ciclico":11.79,"energia":2.31,"financiero":16.3,"real_estate":0.27,"salud":10.68,"industriales":20.09,"tecnologia":26.62,"telecom":8.27,"utilities":1.29,"cons_defensivo":1.59}}},{"tipo":"A - Asesoramiento","grupo":13532,"codigo":"0135320","nombre":"Cliente 19","cartera":{"total_fondos":22558.4,"rent_esp":9.99,"vol":16.22,"sharpe":0.43,"var95":26.69,"fondos":[{"isin":"LU0289476318","nombre":"JPM Global Select Equity A (acc) EUR H","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":11443.96,"rent_esp":9.5,"vol":14.5,"peso":50.73},{"isin":"IE00BYX8VR20","nombre":"New Capital US Small Cp Gr EUR O Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":11114.44,"rent_esp":10.5,"vol":18.0,"peso":49.27}],"categoria":{"patrimonio":22558.4,"cc":0,"alternativos":0,"mm":4.52,"no_considerar":0,"rf":0,"rv":195.48},"divisa":{"cc":0,"euro":100,"dolar":0,"otros":0},"zona":{"cc":0,"asia_em":2.7,"asia_dev":2.38,"europa":6.1,"japon":2.64,"no_cons":0,"uk":0.45,"norte_am":85.73},"sector":{"cc":0,"sin_esp":0,"materiales":1.29,"cons_ciclico":14.23,"energia":4.18,"financiero":13.41,"real_estate":0.37,"salud":17.91,"industriales":15.11,"tecnologia":24.24,"telecom":4.91,"utilities":1.89,"cons_defensivo":2.47}}},{"tipo":"A - Asesoramiento","grupo":13555,"codigo":"0135550","nombre":"Cliente 20","cartera":{"total_fondos":3598433.6,"rent_esp":4.58,"vol":3.83,"sharpe":0.41,"var95":6.31,"fondos":[{"isin":"LU1720111282","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel RE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":217354.43,"rent_esp":6.0,"vol":7.0,"peso":6.04},{"isin":"IE000MI53C66","nombre":"Man GlInGd Opports D H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":439533.92,"rent_esp":4.2,"vol":3.5,"peso":12.21},{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":434548.73,"rent_esp":4.2,"vol":3.5,"peso":12.08},{"isin":"FI0008800511","nombre":"Evli Short Corporate Bond B","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":454156.57,"rent_esp":3.8,"vol":1.5,"peso":12.62},{"isin":"LU0236145453","nombre":"DWS Invest Short Duration Credit LC","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":390058.91,"rent_esp":3.8,"vol":1.5,"peso":10.84},{"isin":"LU1585265066","nombre":"Tikehau Short Duration R EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":450494.86,"rent_esp":3.8,"vol":1.5,"peso":12.52},{"isin":"IE00B567SW70","nombre":"GAM Star Credit Opps (EUR) Ord EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":215876.59,"rent_esp":5.5,"vol":6.0,"peso":6.0},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":220102.61,"rent_esp":5.5,"vol":8.0,"peso":6.12},{"isin":"IE00008TZ2E8","nombre":"Man Dynamic Income D H EUR CAp","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":254730.23,"rent_esp":6.5,"vol":7.5,"peso":7.08},{"isin":"ES0175414012","nombre":"Dunas Valor Equilibrado R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":305733.48,"rent_esp":4.8,"vol":4.0,"peso":8.5},{"isin":"LU1694789451","nombre":"DNCA Invest Alpha Bonds A EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":215843.27,"rent_esp":5.0,"vol":5.0,"peso":6.0}],"categoria":{"patrimonio":3598434.87,"cc":0,"alternativos":12,"mm":0,"no_considerar":0,"rf":188,"rv":0},"divisa":{"cc":0,"euro":99.04,"dolar":3.13,"otros":-2.17},"zona":{"cc":0,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":100,"uk":0,"norte_am":0},"sector":{"cc":0,"sin_esp":100,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"A - Asesoramiento","grupo":13602,"codigo":"0136020","nombre":"Cliente 21","cartera":{"total_fondos":500806.06,"rent_esp":4.81,"vol":4.65,"sharpe":0.39,"var95":7.65,"fondos":[{"isin":"LU1720111282","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel RE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":35135.93,"rent_esp":6.0,"vol":7.0,"peso":7.02},{"isin":"IE000MI53C66","nombre":"Man GlInGd Opports D H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":50062.71,"rent_esp":4.2,"vol":3.5,"peso":10.0},{"isin":"LU0113257694","nombre":"Schroder ISF EURO Corp Bd A Acc EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":50148.57,"rent_esp":4.2,"vol":3.5,"peso":10.01},{"isin":"LU1914597502","nombre":"MFS Meridian Euro Credit A1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":50179.86,"rent_esp":4.2,"vol":3.5,"peso":10.02},{"isin":"FI0008800511","nombre":"Evli Short Corporate Bond B","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":50102.19,"rent_esp":3.8,"vol":1.5,"peso":10.0},{"isin":"LU1585264176","nombre":"Tikehau Subfin RS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":34990.16,"rent_esp":5.5,"vol":6.0,"peso":6.99},{"isin":"LU0284393930","nombre":"DNCA Invest Credit Conviction A EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":35110.76,"rent_esp":4.5,"vol":4.5,"peso":7.01},{"isin":"LU1670724373","nombre":"M&G (Lux) Optimal Income A EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":34967.82,"rent_esp":4.5,"vol":4.5,"peso":6.98},{"isin":"IE00BDZRWZ54","nombre":"Neuberger Berman Shrt DurEM DbtEUR A Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":35061.19,"rent_esp":5.5,"vol":8.0,"peso":7.0},{"isin":"IE00BDTYYP61","nombre":"Man High Yield Opportunities D EUR","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":39979.75,"rent_esp":6.5,"vol":7.5,"peso":7.98},{"isin":"ES0175437005","nombre":"Dunas Valor Prudente R FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":50060.7,"rent_esp":4.8,"vol":4.0,"peso":10.0},{"isin":"LU1694789451","nombre":"DNCA Invest Alpha Bonds A EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":35006.42,"rent_esp":5.0,"vol":5.0,"peso":6.99}],"categoria":{"patrimonio":500806.54,"cc":0,"alternativos":13.98,"mm":0,"no_considerar":0,"rf":186.02,"rv":0},"divisa":{"cc":0,"euro":98.77,"dolar":2.32,"otros":-1.09},"zona":{"cc":0,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":100,"uk":0,"norte_am":0},"sector":{"cc":0,"sin_esp":100,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"G - Gestión","grupo":1105,"codigo":"0011050","nombre":"Cliente 22","cartera":{"total_fondos":1063244.0,"rent_esp":6.51,"vol":8.55,"sharpe":0.41,"var95":14.07,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":84714.59,"rent_esp":4.2,"vol":3.5,"peso":7.97},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":85664.79,"rent_esp":4.2,"vol":3.5,"peso":8.06},{"isin":"FI4000233242","nombre":"Evli Short Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":53886.61,"rent_esp":3.8,"vol":1.5,"peso":5.07},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":55232.43,"rent_esp":5.5,"vol":6.0,"peso":5.19},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":61233.63,"rent_esp":4.5,"vol":4.5,"peso":5.76},{"isin":"LU1797814339","nombre":"M&G (Lux) Optimal Income CI EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":44761.64,"rent_esp":4.5,"vol":4.5,"peso":4.21},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":46128.75,"rent_esp":5.5,"vol":8.0,"peso":4.34},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":49077.76,"rent_esp":5.5,"vol":8.0,"peso":4.62},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":80608.41,"rent_esp":6.5,"vol":7.5,"peso":7.58},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":54490.23,"rent_esp":8.0,"vol":13.5,"peso":5.12},{"isin":"LU1797811236","nombre":"M&G (Lux) Eurp Strat Val CI EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":49567.58,"rent_esp":8.0,"vol":13.5,"peso":4.66},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":21663.04,"rent_esp":9.0,"vol":14.0,"peso":2.04},{"isin":"IE00B03HD316","nombre":"Vanguard Glb Stk Idx € H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":32596.53,"rent_esp":9.5,"vol":14.5,"peso":3.07},{"isin":"LU2552654589","nombre":"JPM Global Select Equity I (acc) - EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":42378.1,"rent_esp":9.5,"vol":14.5,"peso":3.99},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":18518.15,"rent_esp":11.0,"vol":18.0,"peso":1.74},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":16203.22,"rent_esp":8.5,"vol":14.0,"peso":1.52},{"isin":"LU1047850778","nombre":"DNB Fund Technology C1 EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Sector Tecnológico","valor":30620.2,"rent_esp":12.0,"vol":22.0,"peso":2.88},{"isin":"LU0271484684","nombre":"Schroder ISF US Large Cap C Acc EUR Hdg","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":53323.2,"rent_esp":10.0,"vol":14.5,"peso":5.02},{"isin":"LU0832431125","nombre":"Robeco BP US Premium Equities FH €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":55291.23,"rent_esp":10.0,"vol":14.5,"peso":5.2},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":42802.41,"rent_esp":5.0,"vol":5.0,"peso":4.03},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":42155.75,"rent_esp":5.0,"vol":5.0,"peso":3.96},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":42325.75,"rent_esp":5.0,"vol":5.0,"peso":3.98}],"categoria":{"patrimonio":1064004.56,"cc":0.07,"alternativos":11.96,"mm":1.4,"no_considerar":0,"rf":52.77,"rv":33.79},"divisa":{"cc":0.07,"euro":83.8,"dolar":10.12,"otros":6.01},"zona":{"cc":0.07,"asia_em":1.92,"asia_dev":0.49,"europa":10.12,"japon":1.95,"no_cons":65.08,"uk":2.18,"norte_am":18.19},"sector":{"cc":0.07,"sin_esp":64.72,"materiales":1.16,"cons_ciclico":3.3,"energia":0.91,"financiero":6.89,"real_estate":0.35,"salud":3.88,"industriales":4.36,"tecnologia":8.36,"telecom":3.03,"utilities":0.9,"cons_defensivo":2.07}}},{"tipo":"G - Gestión","grupo":11011,"codigo":"0110110","nombre":"Cliente 23","cartera":{"total_fondos":1555672.97,"rent_esp":5.04,"vol":5.31,"sharpe":0.38,"var95":8.74,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":214492.71,"rent_esp":4.2,"vol":3.5,"peso":13.79},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":171116.3,"rent_esp":4.2,"vol":3.5,"peso":11.0},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":96703.2,"rent_esp":5.5,"vol":6.0,"peso":6.22},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":120305.4,"rent_esp":4.5,"vol":4.5,"peso":7.73},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":67914.62,"rent_esp":5.5,"vol":8.0,"peso":4.37},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":116137.53,"rent_esp":5.5,"vol":8.0,"peso":7.47},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":188679.87,"rent_esp":6.5,"vol":7.5,"peso":12.13},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":203025.83,"rent_esp":5.0,"vol":5.0,"peso":13.05},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":163806.27,"rent_esp":5.0,"vol":5.0,"peso":10.53},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":213491.24,"rent_esp":5.0,"vol":5.0,"peso":13.72}],"categoria":{"patrimonio":1555873.97,"cc":0.01,"alternativos":37.3,"mm":0,"no_considerar":0,"rf":62.69,"rv":0},"divisa":{"cc":0.01,"euro":96.77,"dolar":4.03,"otros":-0.81},"zona":{"cc":0.01,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":99.99,"uk":0,"norte_am":0},"sector":{"cc":0.01,"sin_esp":99.99,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"G - Gestión","grupo":11032,"codigo":"0110320","nombre":"Cliente 24","cartera":{"total_fondos":1715861.84,"rent_esp":8.21,"vol":12.33,"sharpe":0.42,"var95":20.28,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":71158.18,"rent_esp":4.2,"vol":3.5,"peso":4.15},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":35839.96,"rent_esp":4.2,"vol":3.5,"peso":2.09},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":35559.8,"rent_esp":5.5,"vol":6.0,"peso":2.07},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":40970.74,"rent_esp":5.5,"vol":6.0,"peso":2.39},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":30560.2,"rent_esp":4.5,"vol":4.5,"peso":1.78},{"isin":"LU1797814339","nombre":"M&G (Lux) Optimal Income CI EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":16705.03,"rent_esp":4.5,"vol":4.5,"peso":0.97},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":62168.35,"rent_esp":5.5,"vol":8.0,"peso":3.62},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":39208.73,"rent_esp":5.5,"vol":8.0,"peso":2.29},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":37755.26,"rent_esp":6.5,"vol":7.5,"peso":2.2},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":103327.77,"rent_esp":8.0,"vol":13.5,"peso":6.02},{"isin":"LU1797811236","nombre":"M&G (Lux) Eurp Strat Val CI EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":126755.25,"rent_esp":8.0,"vol":13.5,"peso":7.39},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":64688.21,"rent_esp":9.0,"vol":14.0,"peso":3.77},{"isin":"IE00B03HD316","nombre":"Vanguard Glb Stk Idx € H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":7206.3,"rent_esp":9.5,"vol":14.5,"peso":0.42},{"isin":"IE00BNG8N985","nombre":"BlackRock Global Uncons Eq D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":79500.32,"rent_esp":9.5,"vol":14.5,"peso":4.63},{"isin":"LU2552654589","nombre":"JPM Global Select Equity I (acc) - EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":50314.45,"rent_esp":9.5,"vol":14.5,"peso":2.93},{"isin":"LU0415391514","nombre":"Bellevue Medtech & Services I EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Healthcare","valor":70376.23,"rent_esp":9.0,"vol":14.0,"peso":4.1},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":74572.72,"rent_esp":11.0,"vol":18.0,"peso":4.35},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":50905.24,"rent_esp":8.5,"vol":14.0,"peso":2.97},{"isin":"LU1047850778","nombre":"DNB Fund Technology C1 EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Sector Tecnológico","valor":113914.32,"rent_esp":12.0,"vol":22.0,"peso":6.64},{"isin":"IE00BYX5N110","nombre":"Fidelity S&P 500 Index EUR P Acc H","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":89310.42,"rent_esp":10.0,"vol":14.5,"peso":5.2},{"isin":"LU0271484684","nombre":"Schroder ISF US Large Cap C Acc EUR Hdg","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":135888.79,"rent_esp":10.0,"vol":14.5,"peso":7.92},{"isin":"LU0832431125","nombre":"Robeco BP US Premium Equities FH €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":94979.13,"rent_esp":10.0,"vol":14.5,"peso":5.54},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":107744.69,"rent_esp":10.5,"vol":18.0,"peso":6.28},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":69328.88,"rent_esp":5.0,"vol":5.0,"peso":4.04},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":78117.5,"rent_esp":5.0,"vol":5.0,"peso":4.55},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":29005.37,"rent_esp":5.0,"vol":5.0,"peso":1.69}],"categoria":{"patrimonio":1716224.47,"cc":0.02,"alternativos":10.28,"mm":2.08,"no_considerar":0,"rf":21.58,"rv":66.03},"divisa":{"cc":0.02,"euro":67.11,"dolar":22.12,"otros":10.74},"zona":{"cc":0.02,"asia_em":4.73,"asia_dev":0.84,"europa":15.09,"japon":3.49,"no_cons":32.24,"uk":3.39,"norte_am":40.2},"sector":{"cc":0.02,"sin_esp":31.84,"materiales":1.77,"cons_ciclico":6.17,"energia":1.53,"financiero":11.28,"real_estate":0.57,"salud":11.47,"industriales":8.96,"tecnologia":16.36,"telecom":5.44,"utilities":1.25,"cons_defensivo":3.34}}},{"tipo":"G - Gestión","grupo":11067,"codigo":"0110670","nombre":"Cliente 25","cartera":{"total_fondos":966180.32,"rent_esp":5.05,"vol":5.49,"sharpe":0.37,"var95":9.03,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":158960.89,"rent_esp":4.2,"vol":3.5,"peso":16.45},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":122314.75,"rent_esp":4.2,"vol":3.5,"peso":12.66},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":155141.89,"rent_esp":5.5,"vol":6.0,"peso":16.06},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":124207.21,"rent_esp":5.5,"vol":6.0,"peso":12.86},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":31479.5,"rent_esp":4.5,"vol":4.5,"peso":3.26},{"isin":"LU1797814339","nombre":"M&G (Lux) Optimal Income CI EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":25265.18,"rent_esp":4.5,"vol":4.5,"peso":2.61},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":57426.21,"rent_esp":5.5,"vol":8.0,"peso":5.94},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":114301.69,"rent_esp":5.5,"vol":8.0,"peso":11.83},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":52143.22,"rent_esp":6.5,"vol":7.5,"peso":5.4},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":57034.15,"rent_esp":5.0,"vol":5.0,"peso":5.9},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":67905.63,"rent_esp":5.0,"vol":5.0,"peso":7.03}],"categoria":{"patrimonio":967906.62,"cc":0.18,"alternativos":12.91,"mm":0,"no_considerar":0,"rf":86.91,"rv":0},"divisa":{"cc":0.18,"euro":97.85,"dolar":2.1,"otros":-0.13},"zona":{"cc":0.18,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":99.82,"uk":0,"norte_am":0},"sector":{"cc":0.18,"sin_esp":99.82,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"G - Gestión","grupo":11089,"codigo":"0110890","nombre":"Cliente 26","cartera":{"total_fondos":982254.65,"rent_esp":6.54,"vol":8.91,"sharpe":0.4,"var95":14.66,"fondos":[{"isin":"IE000XOE1GE5","nombre":"Man GlInGd Opports I USD Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":80874.34,"rent_esp":4.2,"vol":3.5,"peso":8.23},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":31565.3,"rent_esp":4.2,"vol":3.5,"peso":3.21},{"isin":"IE00BF5GGL02","nombre":"GAM Star Credit Opps (EUR) R EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":53163.99,"rent_esp":5.5,"vol":6.0,"peso":5.41},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":54912.26,"rent_esp":5.5,"vol":6.0,"peso":5.59},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":52598.64,"rent_esp":4.5,"vol":4.5,"peso":5.35},{"isin":"LU1670724704","nombre":"M&G (Lux) Optimal Income C EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":39815.66,"rent_esp":4.5,"vol":4.5,"peso":4.05},{"isin":"LU1670725776","nombre":"M&G (Lux) Optimal Income C H USD Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":57356.27,"rent_esp":4.5,"vol":4.5,"peso":5.84},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":53090.56,"rent_esp":5.5,"vol":8.0,"peso":5.4},{"isin":"IE00BYP55026","nombre":"Principal Finisterre Unc EMFI N HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":38576.27,"rent_esp":5.5,"vol":8.0,"peso":3.93},{"isin":"IE000NS7XVU2","nombre":"Man Dynamic Income I USD Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":78753.78,"rent_esp":6.5,"vol":7.5,"peso":8.02},{"isin":"LU1681044563","nombre":"Amundi IS MSCI Em Asia ETF-C USD","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":23194.01,"rent_esp":9.0,"vol":16.0,"peso":2.36},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":59549.97,"rent_esp":8.0,"vol":13.5,"peso":6.06},{"isin":"LU1670707873","nombre":"M&G (Lux) Eurp Strat Val C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":14691.61,"rent_esp":8.0,"vol":13.5,"peso":1.5},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":39235,"rent_esp":9.0,"vol":14.0,"peso":3.99},{"isin":"IE00BNG8NB00","nombre":"BlackRock Global Uncons Eq D EUR H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":19564.9,"rent_esp":9.5,"vol":14.5,"peso":1.99},{"isin":"LU0611475780","nombre":"JPM Global Select Equity C (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":7035.32,"rent_esp":9.5,"vol":14.5,"peso":0.72},{"isin":"LU0453818972","nombre":"Bellevue Medtech & Services I USD","instrumento":"Fondo de renta variable","agrupacion":"RV Healthcare","valor":18710.81,"rent_esp":9.0,"vol":14.0,"peso":1.9},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":12956.55,"rent_esp":11.0,"vol":18.0,"peso":1.32},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":13789.08,"rent_esp":8.5,"vol":14.0,"peso":1.4},{"isin":"LU2445164325","nombre":"Fidelity Global Industrials Y-Acc-USD","instrumento":"Fondo de renta variable","agrupacion":"RV Materiales Industriales","valor":23745.37,"rent_esp":9.0,"vol":15.0,"peso":2.42},{"isin":"LU1047850778","nombre":"DNB Fund Technology C1 EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Sector Tecnológico","valor":36837.56,"rent_esp":12.0,"vol":22.0,"peso":3.75},{"isin":"IE0002EI5AG0","nombre":"Xtrackers S&P 500 EW ETF 2C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":11783.1,"rent_esp":10.0,"vol":15.0,"peso":1.2},{"isin":"LU0832431125","nombre":"Robeco BP US Premium Equities FH €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":23155.36,"rent_esp":10.0,"vol":14.5,"peso":2.36},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":25807.68,"rent_esp":10.5,"vol":18.0,"peso":2.63},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":22483.45,"rent_esp":5.0,"vol":5.0,"peso":2.29},{"isin":"LU1694789709","nombre":"DNCA Invest Alpha Bonds N EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":31176.61,"rent_esp":5.0,"vol":5.0,"peso":3.17},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":38345.16,"rent_esp":5.0,"vol":5.0,"peso":3.9},{"isin":"LU0997718795","nombre":"Templeton Glbl Val and Inc W (Acc) USD","instrumento":"Fondo mixto","agrupacion":"Mixtos Moderados","valor":19486.04,"rent_esp":5.0,"vol":6.0,"peso":1.98}],"categoria":{"patrimonio":1054197.79,"cc":6.88,"alternativos":8.89,"mm":1.22,"no_considerar":0,"rf":51.87,"rv":31.19},"divisa":{"cc":6.88,"euro":62.96,"dolar":29.34,"otros":0.87},"zona":{"cc":6.88,"asia_em":2.73,"asia_dev":1.65,"europa":9.21,"japon":1.96,"no_cons":60.3,"uk":2.12,"norte_am":15.2},"sector":{"cc":6.88,"sin_esp":60.02,"materiales":1.27,"cons_ciclico":2.61,"energia":1.27,"financiero":5.45,"real_estate":0.31,"salud":4.97,"industriales":5.65,"tecnologia":7.23,"telecom":2.14,"utilities":0.45,"cons_defensivo":1.81}}},{"tipo":"G - Gestión","grupo":11160,"codigo":"0111600","nombre":"Cliente 27","cartera":{"total_fondos":95353.5,"rent_esp":4.26,"vol":2.65,"sharpe":0.47,"var95":4.37,"fondos":[{"isin":"ES0165143027","nombre":"Mutuafondo Dinero L FI","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":3383.53,"rent_esp":3.2,"vol":0.3,"peso":3.55},{"isin":"FI4000233242","nombre":"Evli Short Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":46347.97,"rent_esp":3.8,"vol":1.5,"peso":48.61},{"isin":"ES0175437039","nombre":"Dunas Valor Prudente I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":45622,"rent_esp":4.8,"vol":4.0,"peso":47.85}],"categoria":{"patrimonio":95398.24,"cc":0.05,"alternativos":0,"mm":0,"no_considerar":0,"rf":99.95,"rv":0},"divisa":{"cc":0.05,"euro":99.96,"dolar":0,"otros":-0.01},"zona":{"cc":0.05,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":99.95,"uk":0,"norte_am":0},"sector":{"cc":0.05,"sin_esp":99.95,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"G - Gestión","grupo":12290,"codigo":"0122900","nombre":"Cliente 28","cartera":{"total_fondos":4193.69,"rent_esp":9.76,"vol":14.76,"sharpe":0.46,"var95":24.28,"fondos":[{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":995.42,"rent_esp":9.0,"vol":14.0,"peso":23.74},{"isin":"IE0002EI5AG0","nombre":"Xtrackers S&P 500 EW ETF 2C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":3198.27,"rent_esp":10.0,"vol":15.0,"peso":76.26}],"categoria":{"patrimonio":4748.04,"cc":11.68,"alternativos":0,"mm":0.46,"no_considerar":0,"rf":0,"rv":87.86},"divisa":{"cc":11.68,"euro":69.75,"dolar":15.43,"otros":3.14},"zona":{"cc":11.68,"asia_em":0.65,"asia_dev":0.68,"europa":6.39,"japon":0,"no_cons":0,"uk":2.35,"norte_am":78.26},"sector":{"cc":11.68,"sin_esp":0,"materiales":2.75,"cons_ciclico":7.75,"energia":2.86,"financiero":12.64,"real_estate":4.24,"salud":11.51,"industriales":14.5,"tecnologia":14.41,"telecom":3.4,"utilities":4.23,"cons_defensivo":10.04}}},{"tipo":"G - Gestión","grupo":13345,"codigo":"0133453","nombre":"Cliente 29","cartera":{"total_fondos":1744181.9,"rent_esp":6.8,"vol":9.36,"sharpe":0.41,"var95":15.4,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":152961.28,"rent_esp":4.2,"vol":3.5,"peso":8.77},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":122003.7,"rent_esp":4.2,"vol":3.5,"peso":6.99},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":49900.71,"rent_esp":5.5,"vol":6.0,"peso":2.86},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":93259.95,"rent_esp":5.5,"vol":6.0,"peso":5.35},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":101765.5,"rent_esp":4.5,"vol":4.5,"peso":5.83},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":65740.6,"rent_esp":5.5,"vol":8.0,"peso":3.77},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":107031.52,"rent_esp":5.5,"vol":8.0,"peso":6.14},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":137766.22,"rent_esp":6.5,"vol":7.5,"peso":7.9},{"isin":"ES0175316001","nombre":"Dunas Valor Flexible I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":59959.28,"rent_esp":4.8,"vol":4.0,"peso":3.44},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":83795.33,"rent_esp":8.0,"vol":13.5,"peso":4.8},{"isin":"LU1797811236","nombre":"M&G (Lux) Eurp Strat Val CI EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":85676.86,"rent_esp":8.0,"vol":13.5,"peso":4.91},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":55577.9,"rent_esp":9.0,"vol":14.0,"peso":3.19},{"isin":"LU1736383024","nombre":"Robeco BP Global Premium Eqs FH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":86351.97,"rent_esp":9.5,"vol":14.5,"peso":4.95},{"isin":"LU1989506966","nombre":"Bellevue Medtech & Services HI EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Healthcare","valor":63308.78,"rent_esp":9.0,"vol":14.0,"peso":3.63},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":63676.35,"rent_esp":11.0,"vol":18.0,"peso":3.65},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":82159.37,"rent_esp":8.5,"vol":14.0,"peso":4.71},{"isin":"IE00BYX5N110","nombre":"Fidelity S&P 500 Index EUR P Acc H","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":71731.38,"rent_esp":10.0,"vol":14.5,"peso":4.11},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":118869.14,"rent_esp":10.5,"vol":18.0,"peso":6.82},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":50844.34,"rent_esp":5.0,"vol":5.0,"peso":2.92},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":39944.46,"rent_esp":5.0,"vol":5.0,"peso":2.29},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":51857.26,"rent_esp":5.0,"vol":5.0,"peso":2.97}],"categoria":{"patrimonio":1746204.74,"cc":0.12,"alternativos":8.17,"mm":1.47,"no_considerar":0,"rf":51.01,"rv":39.23},"divisa":{"cc":0.12,"euro":83.75,"dolar":7.62,"otros":8.51},"zona":{"cc":0.12,"asia_em":3.92,"asia_dev":0.3,"europa":10.87,"japon":5.2,"no_cons":59.2,"uk":2.8,"norte_am":17.59},"sector":{"cc":0.12,"sin_esp":59.16,"materiales":1.55,"cons_ciclico":3.58,"energia":1.29,"financiero":7.17,"real_estate":0.47,"salud":9.06,"industriales":6.8,"tecnologia":5.63,"telecom":1.91,"utilities":0.82,"cons_defensivo":2.44}}},{"tipo":"G - Gestión","grupo":13346,"codigo":"0133465","nombre":"Cliente 30","cartera":{"total_fondos":1828220.92,"rent_esp":7.52,"vol":11.04,"sharpe":0.41,"var95":18.16,"fondos":[{"isin":"FI4000243217","nombre":"Evli Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":52119.47,"rent_esp":4.2,"vol":3.5,"peso":2.85},{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":91804.97,"rent_esp":4.2,"vol":3.5,"peso":5.02},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":57984.97,"rent_esp":5.5,"vol":6.0,"peso":3.17},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":100408.11,"rent_esp":5.5,"vol":6.0,"peso":5.49},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":75727.12,"rent_esp":4.5,"vol":4.5,"peso":4.14},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":93888.92,"rent_esp":5.5,"vol":8.0,"peso":5.14},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":84953.24,"rent_esp":5.5,"vol":8.0,"peso":4.65},{"isin":"LU0987183380","nombre":"abrdn-Emerging Markets Bond X Acc H EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":22568.34,"rent_esp":5.5,"vol":8.0,"peso":1.23},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":47215.02,"rent_esp":6.5,"vol":7.5,"peso":2.58},{"isin":"IE00B3WVRB16","nombre":"Polar Capital Biotech I Eur Inc","instrumento":"Fondo de renta variable","agrupacion":"RV Biotech","valor":50507.74,"rent_esp":10.0,"vol":20.0,"peso":2.76},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":99136.29,"rent_esp":8.0,"vol":13.5,"peso":5.42},{"isin":"LU1797811236","nombre":"M&G (Lux) Eurp Strat Val CI EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":127095.84,"rent_esp":8.0,"vol":13.5,"peso":6.95},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":79847.41,"rent_esp":9.0,"vol":14.0,"peso":4.37},{"isin":"IE00B03HD316","nombre":"Vanguard Glb Stk Idx € H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":18090.61,"rent_esp":9.5,"vol":14.5,"peso":0.99},{"isin":"LU2552654589","nombre":"JPM Global Select Equity I (acc) - EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":37907.78,"rent_esp":9.5,"vol":14.5,"peso":2.07},{"isin":"LU0415391514","nombre":"Bellevue Medtech & Services I EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Healthcare","valor":91252.76,"rent_esp":9.0,"vol":14.0,"peso":4.99},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":80314.76,"rent_esp":11.0,"vol":18.0,"peso":4.39},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":99573.97,"rent_esp":8.5,"vol":14.0,"peso":5.45},{"isin":"IE00BYX5N110","nombre":"Fidelity S&P 500 Index EUR P Acc H","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":84658.79,"rent_esp":10.0,"vol":14.5,"peso":4.63},{"isin":"LU0271484684","nombre":"Schroder ISF US Large Cap C Acc EUR Hdg","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":95857.58,"rent_esp":10.0,"vol":14.5,"peso":5.24},{"isin":"LU0832431125","nombre":"Robeco BP US Premium Equities FH €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":57008.16,"rent_esp":10.0,"vol":14.5,"peso":3.12},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":113302.24,"rent_esp":10.5,"vol":18.0,"peso":6.2},{"isin":"IE00B59P9M57","nombre":"GAM Star Global Rates EUR Acc","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":47373.72,"rent_esp":5.0,"vol":5.0,"peso":2.59},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":57659.16,"rent_esp":5.0,"vol":5.0,"peso":3.15},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":61963.95,"rent_esp":5.0,"vol":5.0,"peso":3.39}],"categoria":{"patrimonio":1833949.32,"cc":0.31,"alternativos":9.11,"mm":1.75,"no_considerar":0,"rf":34.19,"rv":54.64},"divisa":{"cc":0.31,"euro":70.92,"dolar":16.69,"otros":12.08},"zona":{"cc":0.31,"asia_em":4.72,"asia_dev":0.28,"europa":12.6,"japon":5.86,"no_cons":43.46,"uk":2.98,"norte_am":29.79},"sector":{"cc":0.31,"sin_esp":43.28,"materiales":1.71,"cons_ciclico":4.97,"energia":1.36,"financiero":9,"real_estate":0.6,"salud":14.24,"industriales":7.69,"tecnologia":9.19,"telecom":3.29,"utilities":1.12,"cons_defensivo":3.24}}},{"tipo":"G - Gestión","grupo":13360,"codigo":"0133600","nombre":"Cliente 31","cartera":{"total_fondos":1892199.06,"rent_esp":7.22,"vol":10.54,"sharpe":0.4,"var95":17.34,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":114944.16,"rent_esp":4.2,"vol":3.5,"peso":6.07},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":140840.75,"rent_esp":5.5,"vol":6.0,"peso":7.44},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":145122.13,"rent_esp":5.5,"vol":6.0,"peso":7.67},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":146604.72,"rent_esp":4.5,"vol":4.5,"peso":7.75},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":63553.17,"rent_esp":5.5,"vol":8.0,"peso":3.36},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":121393.28,"rent_esp":5.5,"vol":8.0,"peso":6.42},{"isin":"LU0987183380","nombre":"abrdn-Emerging Markets Bond X Acc H EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":63049.1,"rent_esp":5.5,"vol":8.0,"peso":3.33},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":127240.87,"rent_esp":6.5,"vol":7.5,"peso":6.72},{"isin":"LU1681044563","nombre":"Amundi IS MSCI Em Asia ETF-C USD","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":108502.88,"rent_esp":9.0,"vol":16.0,"peso":5.73},{"isin":"LU1681041890","nombre":"Amundi IS MSCI Europe Quality Fctr ETF-C","instrumento":"Fondo de renta variable","agrupacion":"RV Europe","valor":89371.04,"rent_esp":8.0,"vol":14.0,"peso":4.72},{"isin":"LU1834983477","nombre":"Amundi STOXX Europe 600 Banks ETF Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe","valor":168797.12,"rent_esp":8.0,"vol":14.0,"peso":8.92},{"isin":"IE00BFY0GT14","nombre":"SPDR MSCI World ETF","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":139170.63,"rent_esp":9.0,"vol":14.0,"peso":7.35},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":115831.97,"rent_esp":9.0,"vol":14.0,"peso":6.12},{"isin":"IE00BNG8N985","nombre":"BlackRock Global Uncons Eq D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":96706.79,"rent_esp":9.5,"vol":14.5,"peso":5.11},{"isin":"LU0611475780","nombre":"JPM Global Select Equity C (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":62253.7,"rent_esp":9.5,"vol":14.5,"peso":3.29},{"isin":"IE00BLNMYC90","nombre":"Xtrackers S&P 500 EW ETF 1C","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":130971.95,"rent_esp":10.0,"vol":15.0,"peso":6.92},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":57844.8,"rent_esp":10.5,"vol":18.0,"peso":3.06}],"categoria":{"patrimonio":1893256.57,"cc":0.09,"alternativos":0.04,"mm":0.24,"no_considerar":0,"rf":48.74,"rv":50.92},"divisa":{"cc":0.09,"euro":59.97,"dolar":29.35,"otros":10.62},"zona":{"cc":0.09,"asia_em":3.62,"asia_dev":2.85,"europa":13.7,"japon":0.57,"no_cons":49.06,"uk":4.93,"norte_am":25.21},"sector":{"cc":0.09,"sin_esp":48.74,"materiales":1.11,"cons_ciclico":4.26,"energia":1,"financiero":15.32,"real_estate":0.65,"salud":5.26,"industriales":6.94,"tecnologia":9.63,"telecom":2.69,"utilities":0.85,"cons_defensivo":3.5}}},{"tipo":"G - Gestión","grupo":13383,"codigo":"0133831","nombre":"Cliente 32","cartera":{"total_fondos":1572213.01,"rent_esp":5.5,"vol":6.37,"sharpe":0.39,"var95":10.48,"fondos":[{"isin":"LU1720110474","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel CE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":106549.45,"rent_esp":6.0,"vol":7.0,"peso":6.78},{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":129919.25,"rent_esp":4.2,"vol":3.5,"peso":8.26},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":127178.02,"rent_esp":4.2,"vol":3.5,"peso":8.09},{"isin":"FI4000233242","nombre":"Evli Short Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":128365.76,"rent_esp":3.8,"vol":1.5,"peso":8.16},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":105565.94,"rent_esp":5.5,"vol":6.0,"peso":6.71},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":97431.72,"rent_esp":5.5,"vol":6.0,"peso":6.2},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":120104.18,"rent_esp":4.5,"vol":4.5,"peso":7.64},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":108017.79,"rent_esp":5.5,"vol":8.0,"peso":6.87},{"isin":"LU0987183380","nombre":"abrdn-Emerging Markets Bond X Acc H EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":111470.75,"rent_esp":5.5,"vol":8.0,"peso":7.09},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":109432.16,"rent_esp":6.5,"vol":7.5,"peso":6.96},{"isin":"ES0175316001","nombre":"Dunas Valor Flexible I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":107390.52,"rent_esp":4.8,"vol":4.0,"peso":6.83},{"isin":"LU1775950980","nombre":"Invesco Asian Equity Z EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":37235.41,"rent_esp":9.0,"vol":16.0,"peso":2.37},{"isin":"LU1797811236","nombre":"M&G (Lux) Eurp Strat Val CI EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":38970.28,"rent_esp":8.0,"vol":13.5,"peso":2.48},{"isin":"LU2552654589","nombre":"JPM Global Select Equity I (acc) - EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":29344.94,"rent_esp":9.5,"vol":14.5,"peso":1.87},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":29143.88,"rent_esp":11.0,"vol":18.0,"peso":1.85},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":31428.27,"rent_esp":10.5,"vol":18.0,"peso":2.0},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":73190.35,"rent_esp":5.0,"vol":5.0,"peso":4.66},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":81474.34,"rent_esp":5.0,"vol":5.0,"peso":5.18}],"categoria":{"patrimonio":1572843.39,"cc":0.04,"alternativos":9.83,"mm":0.39,"no_considerar":0,"rf":159.14,"rv":20.34},"divisa":{"cc":0.04,"euro":91.13,"dolar":5.5,"otros":3.33},"zona":{"cc":0.04,"asia_em":3.18,"asia_dev":1.11,"europa":2.07,"japon":0.1,"no_cons":89.45,"uk":0.6,"norte_am":3.46},"sector":{"cc":0.04,"sin_esp":89.4,"materiales":0.55,"cons_ciclico":1.34,"energia":0.34,"financiero":2.16,"real_estate":0.15,"salud":1.21,"industriales":1.33,"tecnologia":1.95,"telecom":0.68,"utilities":0.3,"cons_defensivo":0.55}}},{"tipo":"G - Gestión","grupo":13383,"codigo":"0133832","nombre":"Cliente 33","cartera":{"total_fondos":1557434.16,"rent_esp":5.79,"vol":7.09,"sharpe":0.39,"var95":11.67,"fondos":[{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":186180.77,"rent_esp":4.2,"vol":3.5,"peso":11.95},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":183023.71,"rent_esp":4.2,"vol":3.5,"peso":11.75},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":115217.68,"rent_esp":5.5,"vol":6.0,"peso":7.4},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":61174.73,"rent_esp":5.5,"vol":6.0,"peso":3.93},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":189235.64,"rent_esp":4.5,"vol":4.5,"peso":12.15},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":116464.35,"rent_esp":5.5,"vol":8.0,"peso":7.48},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":117936.45,"rent_esp":6.5,"vol":7.5,"peso":7.57},{"isin":"ES0175437039","nombre":"Dunas Valor Prudente I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":147403.13,"rent_esp":4.8,"vol":4.0,"peso":9.46},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":71684.45,"rent_esp":8.0,"vol":13.5,"peso":4.6},{"isin":"LU0415391514","nombre":"Bellevue Medtech & Services I EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Healthcare","valor":95985.48,"rent_esp":9.0,"vol":14.0,"peso":6.16},{"isin":"LU1047850778","nombre":"DNB Fund Technology C1 EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Sector Tecnológico","valor":62545.63,"rent_esp":12.0,"vol":22.0,"peso":4.02},{"isin":"IE00BYX8VS37","nombre":"New Capital US Small Cp Gr EUR I Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":53840.16,"rent_esp":10.5,"vol":18.0,"peso":3.46},{"isin":"IE00B520F527","nombre":"CQS Salar E1 EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":84492.39,"rent_esp":5.0,"vol":5.0,"peso":5.43},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":72249.59,"rent_esp":5.0,"vol":5.0,"peso":4.64}],"categoria":{"patrimonio":1558953.85,"cc":0.1,"alternativos":20.1,"mm":1.56,"no_considerar":0,"rf":143.3,"rv":34.84},"divisa":{"cc":0.1,"euro":89.02,"dolar":8.82,"otros":2.06},"zona":{"cc":0.1,"asia_em":0.12,"asia_dev":0.36,"europa":5.5,"japon":0.41,"no_cons":81.81,"uk":0.57,"norte_am":11.14},"sector":{"cc":0.1,"sin_esp":81.68,"materiales":0.23,"cons_ciclico":1.17,"energia":0.33,"financiero":1.8,"real_estate":0.08,"salud":7.65,"industriales":1.71,"tecnologia":3.84,"telecom":0.97,"utilities":0.16,"cons_defensivo":0.28}}},{"tipo":"G - Gestión","grupo":13432,"codigo":"0134320","nombre":"Cliente 34","cartera":{"total_fondos":1021431.71,"rent_esp":6.8,"vol":9.05,"sharpe":0.42,"var95":14.89,"fondos":[{"isin":"LU1720110474","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel CE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":62789.92,"rent_esp":6.0,"vol":7.0,"peso":6.15},{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":84235.54,"rent_esp":4.2,"vol":3.5,"peso":8.25},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":15511.32,"rent_esp":4.2,"vol":3.5,"peso":1.52},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":74231.36,"rent_esp":5.5,"vol":6.0,"peso":7.27},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":69302.23,"rent_esp":5.5,"vol":6.0,"peso":6.78},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":31854.24,"rent_esp":4.5,"vol":4.5,"peso":3.12},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":12874.27,"rent_esp":5.5,"vol":8.0,"peso":1.26},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":46356.5,"rent_esp":5.5,"vol":8.0,"peso":4.54},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":86687.68,"rent_esp":6.5,"vol":7.5,"peso":8.49},{"isin":"ES0175414004","nombre":"Dunas Valor Equilibrado I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":49969.91,"rent_esp":4.8,"vol":4.0,"peso":4.89},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":38755.27,"rent_esp":8.0,"vol":13.5,"peso":3.79},{"isin":"LU0987205969","nombre":"Amundi IS Core MSCI Europe RE-C","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":35680.92,"rent_esp":8.0,"vol":13.5,"peso":3.49},{"isin":"IE00BYX5NX33","nombre":"Fidelity MSCI World Index EUR P Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":78292.69,"rent_esp":9.5,"vol":14.5,"peso":7.66},{"isin":"LU2552654589","nombre":"JPM Global Select Equity I (acc) - EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":63202.24,"rent_esp":9.5,"vol":14.5,"peso":6.19},{"isin":"IE0007286036","nombre":"Vanguard Jpn Stk Idx € Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Japan Large-Cap","valor":36931.19,"rent_esp":8.5,"vol":14.0,"peso":3.62},{"isin":"LU0832430747","nombre":"Robeco BP US Premium Equities F €","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":81414.36,"rent_esp":10.0,"vol":14.5,"peso":7.97},{"isin":"IE00BYX8VM74","nombre":"New Capital US Small Cp Gr USD Ins Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Small Cap","valor":47033.35,"rent_esp":10.5,"vol":18.0,"peso":4.6},{"isin":"IE00B520F527","nombre":"CQS Salar E1 EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":34247.54,"rent_esp":5.0,"vol":5.0,"peso":3.35},{"isin":"LU1694789378","nombre":"DNCA Invest Alpha Bonds I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":36476.87,"rent_esp":5.0,"vol":5.0,"peso":3.57},{"isin":"LU2098772523","nombre":"Candriam Bonds Credit Alpha I EUR","instrumento":"Fondo gestión alternativa","agrupacion":"Alternativos","valor":35584.31,"rent_esp":5.0,"vol":5.0,"peso":3.48}],"categoria":{"patrimonio":1022113.02,"cc":0.07,"alternativos":20.84,"mm":2.12,"no_considerar":0,"rf":104.48,"rv":72.44},"divisa":{"cc":0.07,"euro":66.19,"dolar":24.35,"otros":9.39},"zona":{"cc":0.07,"asia_em":0.3,"asia_dev":0.38,"europa":7.88,"japon":4.38,"no_cons":63.12,"uk":1.69,"norte_am":22.19},"sector":{"cc":0.07,"sin_esp":62.63,"materiales":0.97,"cons_ciclico":3.77,"energia":1.37,"financiero":7.33,"real_estate":0.37,"salud":5.06,"industriales":5.64,"tecnologia":8.07,"telecom":2.47,"utilities":0.76,"cons_defensivo":1.51}}},{"tipo":"G - Gestión","grupo":13459,"codigo":"0134590","nombre":"Cliente 35","cartera":{"total_fondos":2144928.03,"rent_esp":3.69,"vol":1.35,"sharpe":0.51,"var95":2.23,"fondos":[{"isin":"ES0165143027","nombre":"Mutuafondo Dinero L FI","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":915080.64,"rent_esp":3.2,"vol":0.3,"peso":42.66},{"isin":"FI4000233242","nombre":"Evli Short Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":449610.84,"rent_esp":3.8,"vol":1.5,"peso":20.96},{"isin":"ES0175437039","nombre":"Dunas Valor Prudente I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":415019.57,"rent_esp":4.8,"vol":4.0,"peso":19.35},{"isin":"FR0013289360","nombre":"Amundi Enhan Ult Sht Trm Bd Select R-C","instrumento":"Fondo de renta fija","agrupacion":"RF Ultra corto plazo","valor":365216.98,"rent_esp":3.5,"vol":0.8,"peso":17.03}],"categoria":{"patrimonio":2145740.39,"cc":0.04,"alternativos":0,"mm":0,"no_considerar":0,"rf":199.92,"rv":0},"divisa":{"cc":0.04,"euro":100.03,"dolar":0,"otros":-0.06},"zona":{"cc":0.04,"asia_em":0,"asia_dev":0,"europa":0,"japon":0,"no_cons":99.96,"uk":0,"norte_am":0},"sector":{"cc":0.04,"sin_esp":99.96,"materiales":0,"cons_ciclico":0,"energia":0,"financiero":0,"real_estate":0,"salud":0,"industriales":0,"tecnologia":0,"telecom":0,"utilities":0,"cons_defensivo":0}}},{"tipo":"G - Gestión","grupo":13497,"codigo":"0134971","nombre":"Cliente 36","cartera":{"total_fondos":773993.58,"rent_esp":7.11,"vol":9.77,"sharpe":0.42,"var95":16.06,"fondos":[{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":61411.08,"rent_esp":4.2,"vol":3.5,"peso":7.93},{"isin":"LU1022659392","nombre":"Franklin Euro Short Dur Bd W(acc)EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":50119.74,"rent_esp":3.8,"vol":1.5,"peso":6.48},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":52000.69,"rent_esp":5.5,"vol":6.0,"peso":6.72},{"isin":"LU0284393773","nombre":"DNCA Invest Credit Conviction I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":61598.42,"rent_esp":4.5,"vol":4.5,"peso":7.96},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":36712.07,"rent_esp":5.5,"vol":8.0,"peso":4.74},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":70303.95,"rent_esp":5.5,"vol":8.0,"peso":9.08},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":95332.53,"rent_esp":6.5,"vol":7.5,"peso":12.32},{"isin":"LU1681044480","nombre":"Amundi IS MSCI Em Asia ETF-C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":39037.95,"rent_esp":9.0,"vol":16.0,"peso":5.04},{"isin":"IE0000UW95D6","nombre":"JPM Global Rsrch Enh Eq Act ETF EUR HAcc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":57906.71,"rent_esp":9.0,"vol":14.0,"peso":7.48},{"isin":"IE00BF1B7389","nombre":"SPDR MSCI All Cntry Wld EUR Hdg ETF Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":46005.06,"rent_esp":9.0,"vol":14.0,"peso":5.94},{"isin":"IE00BPRCH686","nombre":"Invesco JPX-Nikkei 400 ETF","instrumento":"Fondo de renta variable","agrupacion":"RV Japan","valor":23315.3,"rent_esp":8.5,"vol":14.0,"peso":3.01},{"isin":"IE0002EI5AG0","nombre":"Xtrackers S&P 500 EW ETF 2C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":85006.65,"rent_esp":10.0,"vol":15.0,"peso":10.98},{"isin":"IE00B3ZW0K18","nombre":"iShares S&P 500 EUR Hedged ETF Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":55402.58,"rent_esp":10.0,"vol":15.0,"peso":7.16},{"isin":"IE00BYVTMS52","nombre":"Invesco EQQQ NASDAQ-100 ETF (EUR Hdg)","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":39840.85,"rent_esp":10.0,"vol":15.0,"peso":5.15}],"categoria":{"patrimonio":774330.45,"cc":0.04,"alternativos":6.06,"mm":0.26,"no_considerar":0,"rf":110.42,"rv":83.18},"divisa":{"cc":0.04,"euro":90.4,"dolar":6.29,"otros":3.27},"zona":{"cc":0.04,"asia_em":3.23,"asia_dev":2.51,"europa":1.82,"japon":0.7,"no_cons":58.58,"uk":0.53,"norte_am":32.59},"sector":{"cc":0.04,"sin_esp":58.22,"materiales":1.29,"cons_ciclico":4.66,"energia":1.35,"financiero":5.61,"real_estate":1.1,"salud":3.71,"industriales":4.12,"tecnologia":12.32,"telecom":3.86,"utilities":1.35,"cons_defensivo":2.37}}},{"tipo":"G - Gestión","grupo":13508,"codigo":"0135080","nombre":"Cliente 37","cartera":{"total_fondos":7337080.43,"rent_esp":8.09,"vol":11.98,"sharpe":0.43,"var95":19.71,"fondos":[{"isin":"IE00BKKNGZ56","nombre":"Janus Henderson High Yield H2 USD","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":382689.72,"rent_esp":6.0,"vol":7.0,"peso":5.22},{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":191463.04,"rent_esp":4.2,"vol":3.5,"peso":2.61},{"isin":"LU0870268173","nombre":"MFS Meridian US Corporate Bond W1 USD","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":354464.48,"rent_esp":4.2,"vol":3.5,"peso":4.83},{"isin":"LU1234712617","nombre":"DNCA Invest Credit Conviction N EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Flexible","valor":231071.76,"rent_esp":4.5,"vol":4.5,"peso":3.15},{"isin":"IE00BD2ZKP80","nombre":"Principal Finisterre Unc EMFI I Acc $.","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":365046.84,"rent_esp":5.5,"vol":8.0,"peso":4.98},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":298111.49,"rent_esp":6.5,"vol":7.5,"peso":4.06},{"isin":"LU1681044480","nombre":"Amundi IS MSCI Em Asia ETF-C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":276591.11,"rent_esp":9.0,"vol":16.0,"peso":3.77},{"isin":"LU1504077964","nombre":"JPM Europe Equity Plus C (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":488438.72,"rent_esp":8.0,"vol":13.5,"peso":6.66},{"isin":"LU1670707873","nombre":"M&G (Lux) Eurp Strat Val C EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":404800.2,"rent_esp":8.0,"vol":13.5,"peso":5.52},{"isin":"FR0014003N93","nombre":"Amundi MSCI World Swap II ETF EUR H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":782981.73,"rent_esp":9.0,"vol":14.0,"peso":10.67},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":390920.58,"rent_esp":9.0,"vol":14.0,"peso":5.33},{"isin":"IE00BNG8NB00","nombre":"BlackRock Global Uncons Eq D EUR H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":376259.27,"rent_esp":9.5,"vol":14.5,"peso":5.13},{"isin":"LU1736383024","nombre":"Robeco BP Global Premium Eqs FH EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":449827.54,"rent_esp":9.5,"vol":14.5,"peso":6.13},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":261292.43,"rent_esp":11.0,"vol":18.0,"peso":3.56},{"isin":"IE00BD1F4M44","nombre":"iShares Edge MSCI USA Val Fac ETF $ Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":168316.11,"rent_esp":10.0,"vol":15.0,"peso":2.29},{"isin":"IE00BFZXGZ54","nombre":"Invesco EQQQ NASDAQ-100 ETF Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":601538.7,"rent_esp":10.0,"vol":15.0,"peso":8.2},{"isin":"IE00BJ38QD84","nombre":"SPDR® Russell 2000 US Small Cap ETF","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":433821.08,"rent_esp":10.0,"vol":15.0,"peso":5.91},{"isin":"IE00BLNMYC90","nombre":"Xtrackers S&P 500 EW ETF 1C","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":523519.9,"rent_esp":10.0,"vol":15.0,"peso":7.14},{"isin":"LU1751207694","nombre":"SISF GLOBAL CDT INCOME C","instrumento":"Fondo mixto","agrupacion":"RF Flexible","valor":355925.73,"rent_esp":4.5,"vol":4.5,"peso":4.85}],"categoria":{"patrimonio":7421654.48,"cc":1.19,"alternativos":0.02,"mm":3.34,"no_considerar":0,"rf":58.78,"rv":135.6},"divisa":{"cc":1.19,"euro":44.3,"dolar":46.63,"otros":7.93},"zona":{"cc":1.19,"asia_em":5.87,"asia_dev":2.08,"europa":15.65,"japon":0.94,"no_cons":29.74,"uk":4.37,"norte_am":40.21},"sector":{"cc":1.19,"sin_esp":29.36,"materiales":2.67,"cons_ciclico":6.42,"energia":2.09,"financiero":11.98,"real_estate":1.43,"salud":7.58,"industriales":10.13,"tecnologia":15.35,"telecom":5.17,"utilities":1.91,"cons_defensivo":4.78}}},{"tipo":"G - Gestión","grupo":13528,"codigo":"0135280","nombre":"Cliente 38","cartera":{"total_fondos":1328412.15,"rent_esp":7.86,"vol":11.45,"sharpe":0.42,"var95":18.84,"fondos":[{"isin":"LU1720110474","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel CE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":105479.13,"rent_esp":6.0,"vol":7.0,"peso":7.94},{"isin":"FI4000243217","nombre":"Evli Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":68201.28,"rent_esp":4.2,"vol":3.5,"peso":5.13},{"isin":"LU1805016810","nombre":"Tikehau Short Duration F EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":50384.07,"rent_esp":3.8,"vol":1.5,"peso":3.79},{"isin":"LU1805016570","nombre":"Tikehau Subfin FS Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":107265.06,"rent_esp":5.5,"vol":6.0,"peso":8.07},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":52651.45,"rent_esp":5.5,"vol":8.0,"peso":3.96},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":109410.48,"rent_esp":6.5,"vol":7.5,"peso":8.24},{"isin":"LU1681044480","nombre":"Amundi IS MSCI Em Asia ETF-C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Asia (Ex Japón)","valor":109306.26,"rent_esp":9.0,"vol":16.0,"peso":8.23},{"isin":"LU0289214545","nombre":"JPM Europe Equity Plus C perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":140188.74,"rent_esp":8.0,"vol":13.5,"peso":10.55},{"isin":"IE00BF1B7389","nombre":"SPDR MSCI All Cntry Wld EUR Hdg ETF Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":198599.48,"rent_esp":9.0,"vol":14.0,"peso":14.95},{"isin":"IE00BNG8NB00","nombre":"BlackRock Global Uncons Eq D EUR H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":94646.07,"rent_esp":9.5,"vol":14.5,"peso":7.12},{"isin":"IE00BDR0JY05","nombre":"Ashoka WhiteOak India Opps D EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV India","valor":31980.99,"rent_esp":11.0,"vol":18.0,"peso":2.41},{"isin":"IE0002EI5AG0","nombre":"Xtrackers S&P 500 EW ETF 2C EUR","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":146794.98,"rent_esp":10.0,"vol":15.0,"peso":11.05},{"isin":"IE00BJ38QD84","nombre":"SPDR® Russell 2000 US Small Cap ETF","instrumento":"Fondo de renta variable","agrupacion":"RV USA","valor":113504.16,"rent_esp":10.0,"vol":15.0,"peso":8.54}],"categoria":{"patrimonio":1329346.4,"cc":0.07,"alternativos":0.02,"mm":3.06,"no_considerar":0,"rf":74.32,"rv":122.46},"divisa":{"cc":0.07,"euro":75.21,"dolar":20.46,"otros":4.26},"zona":{"cc":0.07,"asia_em":7.89,"asia_dev":4.35,"europa":11.85,"japon":0.75,"no_cons":37.87,"uk":2.4,"norte_am":34.83},"sector":{"cc":0.07,"sin_esp":37.12,"materiales":2.38,"cons_ciclico":6.42,"energia":2.13,"financiero":11.74,"real_estate":1.84,"salud":6.31,"industriales":9.59,"tecnologia":13.35,"telecom":4.54,"utilities":1.85,"cons_defensivo":2.67}}},{"tipo":"G - Gestión","grupo":13566,"codigo":"0135660","nombre":"Cliente 39","cartera":{"total_fondos":1147382.83,"rent_esp":5.77,"vol":6.79,"sharpe":0.41,"var95":11.16,"fondos":[{"isin":"ES0165143027","nombre":"Mutuafondo Dinero L FI","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":9068.38,"rent_esp":3.2,"vol":0.3,"peso":0.79},{"isin":"LU1720110474","nombre":"LSF-Arcano Lw Vol Eurp Inc-ESG Sel CE-A","instrumento":"Fondo de renta fija","agrupacion":"RF Alto Rendimiento","valor":70335.01,"rent_esp":6.0,"vol":7.0,"peso":6.13},{"isin":"IE000VA5W9H0","nombre":"Man GlInGd Opports I H EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":101777.3,"rent_esp":4.2,"vol":3.5,"peso":8.87},{"isin":"LU2553550315","nombre":"MFS Meridian Euro Credit IF1 EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa","valor":100473.99,"rent_esp":4.2,"vol":3.5,"peso":8.76},{"isin":"FI4000233242","nombre":"Evli Short Corporate Bond IB","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":100780.51,"rent_esp":3.8,"vol":1.5,"peso":8.78},{"isin":"LU1805016810","nombre":"Tikehau Short Duration F EUR Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Corporativa corto-plazo","valor":74262.43,"rent_esp":3.8,"vol":1.5,"peso":6.47},{"isin":"FR0011844034","nombre":"Lazard Credit Fi SRI PC EUR","instrumento":"Fondo de renta fija","agrupacion":"RF Deuda subordinada EUR","valor":70455.17,"rent_esp":5.5,"vol":6.0,"peso":6.14},{"isin":"ES0165237019","nombre":"Mutuafondo L FI","instrumento":"Fondo de renta fija","agrupacion":"RF Diversificada","valor":71984.8,"rent_esp":4.0,"vol":4.0,"peso":6.27},{"isin":"IE00BD2ZKW57","nombre":"Principal Finisterre Unc EMFI I HAcc€","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":73980.33,"rent_esp":5.5,"vol":8.0,"peso":6.45},{"isin":"IE00BDZRX185","nombre":"Neuberger Berman Shrt DurEM DbtEUR I Acc","instrumento":"Fondo de renta fija","agrupacion":"RF Global Emergente","valor":81361.48,"rent_esp":5.5,"vol":8.0,"peso":7.09},{"isin":"IE000E4XZ7U3","nombre":"Man Dynamic Income I H EUR Cap","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":65042.11,"rent_esp":6.5,"vol":7.5,"peso":5.67},{"isin":"IE00BDTYYL24","nombre":"Man High Yield Opportunities I EUR","instrumento":"Fondo de renta fija","agrupacion":"RF HY","valor":6201.95,"rent_esp":6.5,"vol":7.5,"peso":0.54},{"isin":"ES0175437039","nombre":"Dunas Valor Prudente I FI","instrumento":"Fondo de renta fija","agrupacion":"RF Multiestrategia","valor":71835.38,"rent_esp":4.8,"vol":4.0,"peso":6.26},{"isin":"LU0289214891","nombre":"JPM Europe Equity Plus I perf (acc) EUR","instrumento":"Fondo de renta variable","agrupacion":"RV Europe Large-Cap","valor":52793.35,"rent_esp":8.0,"vol":13.5,"peso":4.6},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":48165.64,"rent_esp":9.0,"vol":14.0,"peso":4.2},{"isin":"IE00BYX5NX33","nombre":"Fidelity MSCI World Index EUR P Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":49721.86,"rent_esp":9.5,"vol":14.5,"peso":4.33},{"isin":"IE00B1G3DH73","nombre":"Vanguard U.S. 500 Stk Idx € H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":49597.44,"rent_esp":10.0,"vol":14.5,"peso":4.32},{"isin":"IE00BYX5N110","nombre":"Fidelity S&P 500 Index EUR P Acc H","instrumento":"Fondo de renta variable","agrupacion":"RV USA Large Cap","valor":49545.7,"rent_esp":10.0,"vol":14.5,"peso":4.32}],"categoria":{"patrimonio":1147673.48,"cc":0.03,"alternativos":0,"mm":1.36,"no_considerar":0,"rf":156.44,"rv":42.12},"divisa":{"cc":0.03,"euro":87.21,"dolar":7.96,"otros":4.81},"zona":{"cc":0.03,"asia_em":0.12,"asia_dev":0.18,"europa":5.63,"japon":0.25,"no_cons":78.34,"uk":1.18,"norte_am":14.27},"sector":{"cc":0.03,"sin_esp":78.21,"materiales":0.5,"cons_ciclico":1.84,"energia":0.59,"financiero":3.64,"real_estate":0.32,"salud":2.48,"industriales":3.06,"tecnologia":5.2,"telecom":1.71,"utilities":0.47,"cons_defensivo":1.96}}},{"tipo":"G - Gestión","grupo":13594,"codigo":"0135940","nombre":"Cliente 40","cartera":{"total_fondos":211475.96,"rent_esp":5.78,"vol":6.19,"sharpe":0.45,"var95":10.19,"fondos":[{"isin":"LU0423950053","nombre":"BNPP InstiCash EUR 3M Std VNAV Privl Cap","instrumento":"Fondo de mercado monetario","agrupacion":"Mercado Monetario","valor":122766.61,"rent_esp":3.2,"vol":0.3,"peso":58.05},{"isin":"IE00BVYPNZ31","nombre":"Guinness Global Equity Income Y EUR Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global","valor":27379.64,"rent_esp":9.0,"vol":14.0,"peso":12.95},{"isin":"IE00B03HD316","nombre":"Vanguard Glb Stk Idx € H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":39882.06,"rent_esp":9.5,"vol":14.5,"peso":18.86},{"isin":"IE00BNG8NB00","nombre":"BlackRock Global Uncons Eq D EUR H Acc","instrumento":"Fondo de renta variable","agrupacion":"RV Global Large-Cap","valor":21447.65,"rent_esp":9.5,"vol":14.5,"peso":10.14}],"categoria":{"patrimonio":211475.96,"cc":0,"alternativos":0.02,"mm":0.26,"no_considerar":0,"rf":116.12,"rv":83.6},"divisa":{"cc":0,"euro":92.05,"dolar":9.53,"otros":-1.58},"zona":{"cc":0,"asia_em":0.35,"asia_dev":0.6,"europa":7.64,"japon":1.03,"no_cons":58.43,"uk":2.82,"norte_am":29.12},"sector":{"cc":0,"sin_esp":58.05,"materiales":0.59,"cons_ciclico":3.04,"energia":0.64,"financiero":6.98,"real_estate":0.35,"salud":4.3,"industriales":7.73,"tecnologia":10.4,"telecom":3.2,"utilities":0.48,"cons_defensivo":4.23}}},{"tipo":"P - Partícipe","grupo":11011,"codigo":"0110112","nombre":"Cliente 23 (Partícipe)","cartera":{"total_fondos":3751322.36,"rent_esp":7.5,"vol":10.0,"sharpe":0.45,"var95":16.45,"fondos":[{"isin":"ES0173841000","nombre":"Sássola Selección Capital I FI","instrumento":"Fondo de renta variable","agrupacion":"Fondo de fondos Agresivo","valor":3751322.36,"rent_esp":7.5,"vol":10.0,"peso":100.0}],"categoria":{},"divisa":{},"zona":{},"sector":{}}},{"tipo":"P - Partícipe","grupo":11067,"codigo":"0110674","nombre":"Cliente 25 (Partícipe)","cartera":{"total_fondos":1238666.36,"rent_esp":7.5,"vol":10.0,"sharpe":0.45,"var95":16.45,"fondos":[{"isin":"ES0173841000","nombre":"Sássola Selección Capital I FI","instrumento":"Fondo de renta variable","agrupacion":"Fondo de fondos Agresivo","valor":1238666.36,"rent_esp":7.5,"vol":10.0,"peso":100.0}],"categoria":{},"divisa":{},"zona":{},"sector":{}}},{"tipo":"P - Partícipe","grupo":11089,"codigo":"0110892","nombre":"Cliente 26 (Partícipe)","cartera":{"total_fondos":888852.14,"rent_esp":4.6,"vol":4.65,"sharpe":0.34,"var95":7.64,"fondos":[{"isin":"ES0173840010","nombre":"Sássola Selección Base I FI","instrumento":"Fondo de renta fija","agrupacion":"Fondo de fondos Defensivo","valor":401087.77,"rent_esp":3.5,"vol":3.0,"peso":45.12},{"isin":"ES0166213019","nombre":"Sássola Selección Dinámica I FI","instrumento":"Fondo mixto","agrupacion":"Fondo de fondos Moderado","valor":487764.37,"rent_esp":5.5,"vol":6.0,"peso":54.88}],"categoria":{},"divisa":{},"zona":{},"sector":{}}},{"tipo":"P - Partícipe","grupo":11160,"codigo":"0111602","nombre":"Cliente 27 (Partícipe)","cartera":{"total_fondos":391678.31,"rent_esp":3.97,"vol":3.7,"sharpe":0.26,"var95":6.09,"fondos":[{"isin":"ES0173840010","nombre":"Sássola Selección Base I FI","instrumento":"Fondo de renta fija","agrupacion":"Fondo de fondos Defensivo","valor":300052.87,"rent_esp":3.5,"vol":3.0,"peso":76.61},{"isin":"ES0173841018","nombre":"Sássola Selección Capital A FI","instrumento":"Fondo de renta variable","agrupacion":"Fondo de fondos Agresivo","valor":12.85,"rent_esp":7.5,"vol":10.0,"peso":0.0},{"isin":"ES0166213019","nombre":"Sássola Selección Dinámica I FI","instrumento":"Fondo mixto","agrupacion":"Fondo de fondos Moderado","valor":91612.59,"rent_esp":5.5,"vol":6.0,"peso":23.39}],"categoria":{},"divisa":{},"zona":{},"sector":{}}},{"tipo":"P - Partícipe","grupo":13345,"codigo":"0133450","nombre":"Cliente 29 (Partícipe)","cartera":{}},{"tipo":"P - Partícipe","grupo":13346,"codigo":"0133460","nombre":"Cliente 30 (Partícipe)","cartera":{"total_fondos":6577324.59,"rent_esp":6.08,"vol":7.18,"sharpe":0.43,"var95":11.81,"fondos":[{"isin":"ES0173840010","nombre":"Sássola Selección Base I FI","instrumento":"Fondo de renta fija","agrupacion":"Fondo de fondos Defensivo","valor":162609.53,"rent_esp":3.5,"vol":3.0,"peso":2.47},{"isin":"ES0173841000","nombre":"Sássola Selección Capital I FI","instrumento":"Fondo de renta variable","agrupacion":"Fondo de fondos Agresivo","valor":2062271.03,"rent_esp":7.5,"vol":10.0,"peso":31.35},{"isin":"ES0166213019","nombre":"Sássola Selección Dinámica I FI","instrumento":"Fondo mixto","agrupacion":"Fondo de fondos Moderado","valor":4352444.03,"rent_esp":5.5,"vol":6.0,"peso":66.17}],"categoria":{},"divisa":{},"zona":{},"sector":{}}}]};
+
+// ============================================================
+// UTILIDADES
+// ============================================================
+const fmt = (n, dec=2) => n != null ? n.toLocaleString('es-ES', {minimumFractionDigits:dec, maximumFractionDigits:dec}) : '-';
+const fmtEur = (n) => n != null ? '€ ' + n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0}) : '-';
+const fmtPct = (n) => n != null ? fmt(n) + '%' : '-';
+
+function tipoPill(tipo) {
+  if (!tipo) return '';
+  const cls = tipo.includes('Ases') ? 'badge-a' : tipo.includes('Gest') ? 'badge-g' : 'badge-p';
+  const lbl = tipo.includes('Ases') ? 'Asesoramiento' : tipo.includes('Gest') ? 'Gestión' : 'Partícipe';
+  return `<span class="badge-tipo ${cls}">${lbl}</span>`;
+}
+
+function instrPill(instr) {
+  if (!instr) return '';
+  let cls = 'pill-mix', lbl = instr;
+  if (instr.includes('variable')) { cls = 'pill-rv'; lbl = 'RV'; }
+  else if (instr.includes('fija')) { cls = 'pill-rf'; lbl = 'RF'; }
+  else if (instr.includes('mixto')) { cls = 'pill-mix'; lbl = 'Mixto'; }
+  else if (instr.includes('Commodity') || instr.includes('ETC')) { cls = 'pill-alt'; lbl = 'ETC'; }
+  else if (instr.includes('monetario')) { cls = 'pill-mm'; lbl = 'MM'; }
+  else if (instr.includes('alternativa')) { cls = 'pill-alt'; lbl = 'Alt'; }
+  return `<span class="pill ${cls}">${lbl}</span>`;
+}
+
+function riskClass(vol) {
+  if (vol >= 12) return 'risk-high';
+  if (vol >= 6) return 'risk-med';
+  return 'risk-low';
+}
+
+function rentClass(r) {
+  if (r >= 7) return 'rent-positive';
+  return 'rent-neutral';
+}
+
+// ============================================================
+// SELECTORS
+// ============================================================
+// ============================================================
+// ============================================================
+// CONFIGURACIÓN DE CAMPOS — EDITA AQUÍ
+// ============================================================
+// Elige qué campo del objeto cliente se usa como:
+//   CAMPO_GRUPO_ID   → valor interno para agrupar (debe ser único por grupo)
+//   CAMPO_GRUPO_LABEL → texto visible en el selector de Grupo
+//   CAMPO_CLIENTE_ID  → valor interno para identificar cada cartera
+//   CAMPO_CLIENTE_LABEL → texto visible en el selector de Cliente
+//
+// Campos disponibles en cada objeto cliente:
+//   'grupo'   → número de grupo          (ej: 13495)
+//   'codigo'  → código de cartera        (ej: "0134950")
+//   'nombre'  → nombre del cliente       (ej: "Cliente 1")
+//   'tipo'    → tipo de cliente          (ej: "A - Asesoramiento")
+//
+// Ejemplo: si tuvieras un campo 'razon_social' o 'nombre_grupo'
+// en tus datos, bastaría con escribirlo aquí.
+
+const CONFIG = {
+  CAMPO_GRUPO_ID:      'grupo',    // campo que identifica unívocamente el grupo
+  CAMPO_GRUPO_LABEL:   'grupo',    // campo que se muestra en el selector de Grupo
+  CAMPO_CLIENTE_ID:    'codigo',   // campo que identifica unívocamente la cartera
+  CAMPO_CLIENTE_LABEL: 'nombre',   // campo que se muestra en el selector de Cliente
+};
+
+// Prefijo que se antepone al valor del grupo si no es texto (opcional, deja '' para nada)
+const GRUPO_PREFIJO = 'Grupo ';
+
+function getGrupoId(cliente) {
+  return cliente[CONFIG.CAMPO_GRUPO_ID];
+}
+
+function getGrupoLabel(grupoId) {
+  // Busca en los datos el primer cliente que tenga ese grupoId
+  // y devuelve el campo CAMPO_GRUPO_LABEL de ese cliente
+  if (CONFIG.CAMPO_GRUPO_ID === CONFIG.CAMPO_GRUPO_LABEL) {
+    // El campo de label es el mismo que el de id: añadir prefijo si es numérico
+    return (typeof grupoId === 'number' || /^\d+$/.test(String(grupoId)))
+      ? GRUPO_PREFIJO + grupoId
+      : String(grupoId);
+  }
+  const ref = RAW.clientes.find(c => String(c[CONFIG.CAMPO_GRUPO_ID]) === String(grupoId));
+  if (ref && ref[CONFIG.CAMPO_GRUPO_LABEL] != null) return String(ref[CONFIG.CAMPO_GRUPO_LABEL]);
+  return String(grupoId);
+}
+
+function getClienteId(cliente) {
+  return cliente[CONFIG.CAMPO_CLIENTE_ID];
+}
+
+function getClienteLabel(cliente) {
+  const val = cliente[CONFIG.CAMPO_CLIENTE_LABEL];
+  return (val != null && String(val).trim() !== '') ? String(val) : String(cliente[CONFIG.CAMPO_CLIENTE_ID]);
+}
+
+function onTipoChange() {
+  const tipo = document.getElementById('sel-tipo').value;
+  const selGrupo = document.getElementById('sel-grupo');
+  selGrupo.innerHTML = '<option value="">— Todos los grupos —</option>';
+
+  const filtered = RAW.clientes.filter(c => c.nombre && !c.nombre.includes('VLOOKUP') && (!tipo || c.tipo === tipo));
+  const grupos = [...new Map(filtered.map(c => [String(getGrupoId(c)), c])).values()]
+    .sort((a, b) => {
+      const la = getGrupoLabel(getGrupoId(a)).toLowerCase();
+      const lb = getGrupoLabel(getGrupoId(b)).toLowerCase();
+      return la.localeCompare(lb, 'es');
+    });
+  grupos.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = getGrupoId(c);
+    opt.textContent = getGrupoLabel(getGrupoId(c));
+    selGrupo.appendChild(opt);
+  });
+
+  populateClientes();
+  
+  // Mostrar automáticamente el consolidado
+  const consolidado = consolidarTodos();
+  if (consolidado) {
+    renderDashboard(consolidado);
+  } else {
+    clearDashboard();
+  }
+}
+
+function onGrupoChange() {
+  populateClientes();
+  
+  // Mostrar automáticamente el consolidado
+  const consolidado = consolidarTodos();
+  if (consolidado) {
+    renderDashboard(consolidado);
+  } else {
+    clearDashboard();
+  }
+}
+
+function populateClientes() {
+  const tipo = document.getElementById('sel-tipo').value;
+  const grupo = document.getElementById('sel-grupo').value;
+  const sel = document.getElementById('sel-cliente');
+  sel.innerHTML = '<option value="">— Todos los clientes —</option>';
+
+  // Si hay grupo seleccionado, opción consolidada al inicio
+  if (grupo) {
+    const optGroup = document.createElement('option');
+    optGroup.value = '__grupo__' + grupo;
+    optGroup.textContent = '\u25a3 Ver ' + getGrupoLabel(grupo) + ' — consolidado';
+    sel.appendChild(optGroup);
+    const sep = document.createElement('option');
+    sep.disabled = true;
+    sep.textContent = '\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500';
+    sel.appendChild(sep);
+  }
+
+  RAW.clientes.filter(c => {
+    if (!c.nombre || c.nombre.includes('VLOOKUP')) return false;
+    if (tipo && c.tipo !== tipo) return false;
+    if (grupo && String(getGrupoId(c)) !== String(grupo)) return false;
+    return true;
+  }).forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = getClienteId(c);
+    opt.textContent = getClienteLabel(c) + ' (' + getClienteId(c) + ')';
+    sel.appendChild(opt);
+  });
+}
+
+// ============================================================
+// CONSOLIDAR TODOS LOS CLIENTES
+// ============================================================
+function consolidarTodos() {
+  const tipo = document.getElementById('sel-tipo').value;
+  const grupo = document.getElementById('sel-grupo').value;
+  
+  const miembros = RAW.clientes.filter(c =>
+    c.nombre && !c.nombre.includes('VLOOKUP') &&
+    (!tipo || c.tipo === tipo) &&
+    (!grupo || String(getGrupoId(c)) === String(grupo)) &&
+    c.cartera && c.cartera.total_fondos > 0
+  );
+  
+  if (!miembros.length) return null;
+
+  const totalGrupo = miembros.reduce((s, c) => s + (c.cartera.total_fondos || 0), 0);
+
+  // Consolidar fondos: sumar valores por ISIN
+  const fondosMap = {};
+  miembros.forEach(c => {
+    (c.cartera.fondos || []).forEach(f => {
+      const key = f.isin || f.nombre;
+      if (!fondosMap[key]) {
+        fondosMap[key] = { ...f, valor: 0 };
+      }
+      fondosMap[key].valor += f.valor || 0;
+    });
+  });
+  const fondosConsolidados = Object.values(fondosMap).map(f => ({
+    ...f,
+    peso: totalGrupo > 0 ? f.valor / totalGrupo * 100 : 0
+  }));
+
+  // Rentabilidad y volatilidad ponderadas por patrimonio
+  const wAvg = (key) => miembros.reduce((s, c) => s + (c.cartera[key] || 0) * (c.cartera.total_fondos / totalGrupo), 0);
+  const rent_esp = wAvg('rent_esp');
+  const vol = wAvg('vol');
+  const sharpe = vol > 0 ? (rent_esp - 3.0) / vol : 0;
+  const var95 = vol * 1.645;
+
+  // Consolidar composición ponderada por patrimonio
+  const wCat = (key) => miembros.reduce((s, c) => s + ((c.cartera.categoria?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wDiv = (key) => miembros.reduce((s, c) => s + ((c.cartera.divisa?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wZona = (key) => miembros.reduce((s, c) => s + ((c.cartera.zona?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wSec = (key) => miembros.reduce((s, c) => s + ((c.cartera.sector?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+
+  let nombreConsolidado = 'Todos los clientes';
+  if (tipo && grupo) {
+    nombreConsolidado = `${tipo.split(' - ')[0]} - ${getGrupoLabel(grupo)} — Consolidado`;
+  } else if (tipo) {
+    nombreConsolidado = `${tipo} — Consolidado`;
+  } else if (grupo) {
+    nombreConsolidado = `${getGrupoLabel(grupo)} — Consolidado`;
+  }
+
+  return {
+    tipo: tipo || 'Todos',
+    codigo: 'TODOS',
+    nombre: `${nombreConsolidado} (${miembros.length} carteras)`,
+    _esConsolidado: true,
+    _miembros: miembros,
+    cartera: {
+      total_fondos: totalGrupo,
+      rent_esp: Math.round(rent_esp * 100) / 100,
+      vol: Math.round(vol * 100) / 100,
+      sharpe: Math.round(sharpe * 100) / 100,
+      var95: Math.round(var95 * 100) / 100,
+      fondos: fondosConsolidados,
+      categoria: {
+        rv: wCat('rv'), rf: wCat('rf'), alternativos: wCat('alternativos'),
+        mm: wCat('mm'), cc: wCat('cc')
+      },
+      divisa: {
+        euro: wDiv('euro'), dolar: wDiv('dolar'), otros: wDiv('otros'), cc: wDiv('cc')
+      },
+      zona: {
+        europa: wZona('europa'), norte_am: wZona('norte_am'), asia_em: wZona('asia_em'),
+        asia_dev: wZona('asia_dev'), japon: wZona('japon'), uk: wZona('uk'), no_cons: wZona('no_cons')
+      },
+      sector: {
+        tecnologia: wSec('tecnologia'), financiero: wSec('financiero'), salud: wSec('salud'),
+        industriales: wSec('industriales'), cons_ciclico: wSec('cons_ciclico'),
+        cons_defensivo: wSec('cons_defensivo'), energia: wSec('energia'),
+        materiales: wSec('materiales'), real_estate: wSec('real_estate'),
+        telecom: wSec('telecom'), utilities: wSec('utilities'), sin_esp: wSec('sin_esp')
+      }
+    }
+  };
+}
+
+// ============================================================
+// CONSOLIDAR GRUPO
+// ============================================================
+function consolidarGrupo(grupoId) {
+  const tipo = document.getElementById('sel-tipo').value;
+  const miembros = RAW.clientes.filter(c =>
+    String(getGrupoId(c)) === String(grupoId) &&
+    c.nombre && !c.nombre.includes('VLOOKUP') &&
+    (!tipo || c.tipo === tipo) &&
+    c.cartera && c.cartera.total_fondos > 0
+  );
+  if (!miembros.length) return null;
+
+  const totalGrupo = miembros.reduce((s, c) => s + (c.cartera.total_fondos || 0), 0);
+
+  // Consolidar fondos: sumar valores por ISIN
+  const fondosMap = {};
+  miembros.forEach(c => {
+    (c.cartera.fondos || []).forEach(f => {
+      const key = f.isin || f.nombre;
+      if (!fondosMap[key]) {
+        fondosMap[key] = { ...f, valor: 0 };
+      }
+      fondosMap[key].valor += f.valor || 0;
+    });
+  });
+  const fondosConsolidados = Object.values(fondosMap).map(f => ({
+    ...f,
+    peso: totalGrupo > 0 ? f.valor / totalGrupo * 100 : 0
+  }));
+
+  // Rentabilidad y volatilidad ponderadas por patrimonio
+  const wAvg = (key) => miembros.reduce((s, c) => s + (c.cartera[key] || 0) * (c.cartera.total_fondos / totalGrupo), 0);
+  const rent_esp = wAvg('rent_esp');
+  const vol = wAvg('vol');
+  const sharpe = vol > 0 ? (rent_esp - 3.0) / vol : 0;
+  const var95 = vol * 1.645;
+
+  // Consolidar composición ponderada por patrimonio
+  const wCat = (key) => miembros.reduce((s, c) => s + ((c.cartera.categoria?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wDiv = (key) => miembros.reduce((s, c) => s + ((c.cartera.divisa?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wZona = (key) => miembros.reduce((s, c) => s + ((c.cartera.zona?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+  const wSec = (key) => miembros.reduce((s, c) => s + ((c.cartera.sector?.[key] || 0) * (c.cartera.total_fondos / totalGrupo)), 0);
+
+  return {
+    tipo: miembros[0].tipo,
+    grupo: grupoId,
+    codigo: 'GRUPO-' + grupoId,
+    [CONFIG.CAMPO_GRUPO_ID]: grupoId,
+    nombre: getGrupoLabel(grupoId) + ' — Consolidado (' + miembros.length + ' carteras)',
+    _esGrupo: true,
+    _miembros: miembros,
+    cartera: {
+      total_fondos: totalGrupo,
+      rent_esp: Math.round(rent_esp * 100) / 100,
+      vol: Math.round(vol * 100) / 100,
+      sharpe: Math.round(sharpe * 100) / 100,
+      var95: Math.round(var95 * 100) / 100,
+      fondos: fondosConsolidados,
+      categoria: {
+        rv: wCat('rv'), rf: wCat('rf'), alternativos: wCat('alternativos'),
+        mm: wCat('mm'), cc: wCat('cc')
+      },
+      divisa: {
+        euro: wDiv('euro'), dolar: wDiv('dolar'), otros: wDiv('otros'), cc: wDiv('cc')
+      },
+      zona: {
+        europa: wZona('europa'), norte_am: wZona('norte_am'), asia_em: wZona('asia_em'),
+        asia_dev: wZona('asia_dev'), japon: wZona('japon'), uk: wZona('uk'), no_cons: wZona('no_cons')
+      },
+      sector: {
+        tecnologia: wSec('tecnologia'), financiero: wSec('financiero'), salud: wSec('salud'),
+        industriales: wSec('industriales'), cons_ciclico: wSec('cons_ciclico'),
+        cons_defensivo: wSec('cons_defensivo'), energia: wSec('energia'),
+        materiales: wSec('materiales'), real_estate: wSec('real_estate'),
+        telecom: wSec('telecom'), utilities: wSec('utilities'), sin_esp: wSec('sin_esp')
+      }
+    }
+  };
+}
+
+function onClienteChange() {
+  const val = document.getElementById('sel-cliente').value;
+  
+  if (!val) {
+    // Mostrar todos los clientes agregados
+    const consolidado = consolidarTodos();
+    if (consolidado) {
+      renderDashboard(consolidado);
+    } else {
+      clearDashboard();
+    }
+    return;
+  }
+
+  if (val.startsWith('__grupo__')) {
+    const grupoId = val.replace('__grupo__', '');
+    const consolidado = consolidarGrupo(grupoId);
+    if (consolidado) renderDashboard(consolidado);
+    return;
+  }
+
+  const cliente = RAW.clientes.find(c => String(getClienteId(c)) === String(val));
+  if (cliente) renderDashboard(cliente);
+}
+
+function clearDashboard() {
+  document.getElementById('main-content').innerHTML = `
+    <div class="no-data" style="padding:80px;">
+      <div style="font-size:40px;margin-bottom:16px;">📊</div>
+      <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Selecciona un cliente</div>
+      <div style="color:var(--text3);">Usa los filtros superiores para visualizar el dashboard de cartera</div>
+    </div>`;
+  document.getElementById('badge-tipo-header').innerHTML = '';
+  document.getElementById('info-codigo').textContent = '';
+}
+
+// ============================================================
+// RENDER DASHBOARD
+// ============================================================
+let chartInstances = [];
+function destroyCharts() {
+  chartInstances.forEach(c => { try { c.destroy(); } catch(e){} });
+  chartInstances = [];
+}
+
+function renderDashboard(cliente) {
+  destroyCharts();
+  const cart = cliente.cartera || {};
+  const fondos = cart.fondos || [];
+  const total = cart.total_fondos || 0;
+
+  // Efectivo del % C.Corrientes en divisa
+  const pctCC = cart.divisa?.cc || 0;
+  const efectivo = total * pctCC / 100;
+  const totalConEfectivo = total; // el patrimonio ya incluye efectivo según datos fuente
+
+  document.getElementById('badge-tipo-header').innerHTML = tipoPill(cliente.tipo) +
+    (cliente._esGrupo ? '<span style="margin-left:8px;background:rgba(31,59,115,0.1);color:#1F3B73;border:1px solid rgba(31,59,115,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">CONSOLIDADO</span>' : '');
+  document.getElementById('info-codigo').textContent = cliente._esGrupo
+    ? getGrupoLabel(cliente.grupo) + ' | ' + cliente._miembros.length + ' carteras consolidadas | Patrimonio total: ' + fmtEur(cliente.cartera.total_fondos)
+    : 'Código: ' + getClienteId(cliente) + ' | ' + getGrupoLabel(getGrupoId(cliente));
+
+  // ---- ANALISIS ----
+  const alerts = generateAlerts(cliente, cart, fondos);
+
+  document.getElementById('main-content').innerHTML = `
+  <div class="fade-in">
+    <!-- KPIs -->
+    <div class="section-title">${cliente._esGrupo ? "Grupo Consolidado — " : "Resumen de Cartera — "}${getClienteLabel(cliente)}</div>
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- GRAFICOS COMPOSICIÓN -->
+    <div class="section-title">Composición de la Cartera</div>
+    <div class="grid-3">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">Tipo de Activo</div></div></div>
+        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-tipo"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">Divisa</div></div></div>
+        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-divisa"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">Zona Geográfica</div></div></div>
+        <div class="panel-body"><div class="chart-wrap"><canvas id="chart-zona"></canvas></div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><div><div class="panel-title">Distribución por Sector</div><div class="panel-sub">% sobre total clasificado (excluye "Sin especificar")</div></div></div>
+      <div class="panel-body" style="padding:20px 24px;"><canvas id="chart-sector" style="height:320px;"></canvas></div>
+    </div>
+
+    <!-- RIESGO / RENTABILIDAD -->
+    <div class="grid-2">
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">Dispersión Rentabilidad / Riesgo por Posición</div><div class="panel-sub">Tamaño = peso en cartera</div></div></div>
+        <div class="panel-body" style="padding:20px;height:320px;"><div class="scatter-wrap"><canvas id="chart-scatter"></canvas></div></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><div><div class="panel-title">Distribución por Agrupación</div></div></div>
+        <div class="panel-body" style="padding:16px 20px;">
+          <div id="prog-agrupacion"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSICIONES -->
+    <div class="panel">
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab(this,'tab-posiciones')">Posiciones Detalle</div>
+        <div class="tab" onclick="switchTab(this,'tab-analisis')">Análisis y Mejoras</div>
+      </div>
+      <div id="tab-posiciones" class="tab-content active">
+        <div class="tbl-wrap" id="tabla-posiciones"></div>
+      </div>
+      <div id="tab-analisis" class="tab-content">
+        <div style="margin-bottom:16px;color:var(--text2);font-size:12px;">Análisis automático basado en composición, concentración, riesgo/rentabilidad y eficiencia de la cartera.</div>
+        <div class="analysis-grid" id="analisis-alerts"></div>
+      </div>
+    </div>
+  </div>`;
+
+  // ---- KPIs ----
+  const kpiData = [
+    { label: 'Patrimonio Total', value: fmtEur(totalConEfectivo), sub: cliente._esGrupo ? cliente._miembros.length + ' carteras consolidadas' : (pctCC > 0 ? `Liquidez: ${fmtPct(pctCC)}` : 'En fondos'), color: 'blue', icon: '💼' },
+    { label: 'Rent. Esperada', value: fmtPct(cart.rent_esp), sub: 'Ponderada por patrimonio', color: 'green', icon: '📈' },
+    { label: 'Volatilidad (Riesgo)', value: fmtPct(cart.vol), sub: 'Desv. estándar anual', color: cart.vol >= 12 ? 'red' : cart.vol >= 7 ? 'orange' : 'green', icon: '⚡' },
+    { label: 'Sharpe Ratio', value: fmt(cart.sharpe), sub: 'Rf = 3%', color: cart.sharpe >= 0.5 ? 'green' : cart.sharpe >= 0.3 ? 'gold' : 'orange', icon: '⚖️' },
+    { label: 'VaR 95% Anual', value: fmtPct(cart.var95), sub: 'Pérdida máx. esperada', color: 'red', icon: '🛡️' },
+  ];
+  const kpiGrid = document.getElementById('kpi-grid');
+  kpiData.forEach(k => {
+    kpiGrid.innerHTML += `<div class="kpi-card ${k.color}">
+      <div class="kpi-icon">${k.icon}</div>
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`;
+  });
+
+  // Tabla de miembros del grupo (solo en vista consolidada)
+  if (cliente._esGrupo && cliente._miembros.length > 0) {
+    const grupoEl = document.getElementById('kpi-grid');
+    const miembrosHtml = cliente._miembros.map(m =>
+      `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+        <span style="color:var(--text2);font-size:12px;">${getClienteLabel(m)}</span>
+        <span style="display:flex;gap:16px;font-size:11px;">
+          <span style="color:var(--text3);">${getClienteId(m)}</span>
+          <span style="color:var(--text);font-weight:600;">${fmtEur(m.cartera.total_fondos)}</span>
+          <span class="${rentClass(m.cartera.rent_esp)}">${fmtPct(m.cartera.rent_esp)}</span>
+          <span class="${riskClass(m.cartera.vol)}">${fmtPct(m.cartera.vol)} vol</span>
+        </span>
+      </div>`
+    ).join('');
+    const miembrosPanel = document.createElement('div');
+    miembrosPanel.className = 'panel';
+    miembrosPanel.style.marginTop = '0';
+    miembrosPanel.innerHTML = `
+      <div class="panel-header">
+        <div><div class="panel-title">Carteras del Grupo</div><div class="panel-sub">Desglose por cartera individual</div></div>
+      </div>
+      <div class="panel-body" style="padding:12px 20px;">${miembrosHtml}</div>`;
+    grupoEl.parentNode.insertBefore(miembrosPanel, grupoEl.nextSibling);
+  }
+
+  // ---- CHARTS ----
+  const COLORS = ['#4f8ef7','#34d399','#f0c060','#fb923c','#f87171','#c084fc','#7cc2ff','#6ee7b7','#fde68a','#fdba74','#a78bfa','#38bdf8','#fb7185','#86efac'];
+  const chartDefs = {
+    'chart-tipo': {
+      labels: ['RV', 'RF', 'Alternativos', 'Mixtos', 'M. Monetario', 'Liquidez'],
+      data: [cart.categoria?.rv||0, cart.categoria?.rf||0, cart.categoria?.alternativos||0,
+             calcMixtos(fondos, total), cart.categoria?.mm||0, cart.categoria?.cc||0]
+    },
+    'chart-divisa': {
+      labels: ['Euro', 'Dólar USA', 'Otros', 'Liquidez'],
+      data: [cart.divisa?.euro||0, cart.divisa?.dolar||0, cart.divisa?.otros||0, cart.divisa?.cc||0]
+    },
+    'chart-zona': (() => {
+      const rawZona = [
+        { l: 'Europa Des.',   v: cart.zona?.europa||0 },
+        { l: 'Norte América', v: cart.zona?.norte_am||0 },
+        { l: 'Asia Emergente',v: cart.zona?.asia_em||0 },
+        { l: 'Asia Des.',     v: cart.zona?.asia_dev||0 },
+        { l: 'Japón',         v: cart.zona?.japon||0 },
+        { l: 'UK',            v: cart.zona?.uk||0 },
+      ];
+      const sumZona = rawZona.reduce((s,x)=>s+x.v, 0);
+      return { labels: rawZona.map(x=>x.l), data: rawZona.map(x => sumZona > 0 ? x.v/sumZona*100 : 0), _renorm: true };
+    })(),
+    'chart-sector': (() => {
+      const rawSec = [
+        { l: 'Tecnología',    v: cart.sector?.tecnologia||0 },
+        { l: 'Financiero',    v: cart.sector?.financiero||0 },
+        { l: 'Salud',         v: cart.sector?.salud||0 },
+        { l: 'Industriales',  v: cart.sector?.industriales||0 },
+        { l: 'Cons. Cíclico', v: cart.sector?.cons_ciclico||0 },
+        { l: 'Cons. Defensivo',v: cart.sector?.cons_defensivo||0 },
+        { l: 'Energía',       v: cart.sector?.energia||0 },
+        { l: 'Materiales',    v: cart.sector?.materiales||0 },
+        { l: 'Real Estate',   v: cart.sector?.real_estate||0 },
+        { l: 'Telecom',       v: cart.sector?.telecom||0 },
+        { l: 'Utilities',     v: cart.sector?.utilities||0 },
+      ];
+      const sumSec = rawSec.reduce((s,x)=>s+x.v, 0);
+      return { labels: rawSec.map(x=>x.l), data: rawSec.map(x => sumSec > 0 ? x.v/sumSec*100 : 0), _renorm: true };
+    })()
+  };
+
+  Object.entries(chartDefs).forEach(([id, cfg]) => {
+    if (id === 'chart-sector') return; // se renderiza aparte
+    const filtered = cfg.labels.map((l,i) => ({l, v: cfg.data[i] || 0})).filter(x => Math.abs(x.v) > 0.1);
+    if (!filtered.length) return;
+    const ctx = document.getElementById(id)?.getContext('2d');
+    if (!ctx) return;
+
+    const isZona = (id === 'chart-zona');
+
+    // Para zona: leyenda con porcentaje integrado, sin datalabels internos
+    const legendConfig = isZona
+      ? {
+          position: 'bottom',
+          labels: {
+            color: '#3D5A8A',
+            font: { size: 10, family: 'DM Sans' },
+            padding: 12,
+            boxWidth: 10,
+            generateLabels: (chart) => {
+              const data = chart.data;
+              return data.labels
+                .map((label, i) => ({
+                  text: `${label}: ${fmt(data.datasets[0].data[i])}%`,
+                  fillStyle: COLORS[i % COLORS.length],
+                  strokeStyle: '#FFFFFF',
+                  lineWidth: 1,
+                  index: i,
+                  hidden: false,
+                  _value: data.datasets[0].data[i],
+                }))
+                .sort((a, b) => b._value - a._value);
+            }
+          }
+        }
+      : { position: 'bottom', labels: { color: '#3D5A8A', font: { size: 10, family: 'DM Sans' }, padding: 10, boxWidth: 10 } };
+
+    const ch = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: filtered.map(x=>x.l),
+        datasets: [{ data: filtered.map(x=>x.v), backgroundColor: COLORS, borderColor: '#FFFFFF', borderWidth: 2, hoverBorderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        plugins: {
+          legend: legendConfig,
+          tooltip: { callbacks: { label: (ctx) => ` ${ctx.label}: ${fmt(ctx.parsed)}%` + (cfg._renorm ? ' *' : '') } },
+          datalabels: isZona
+            ? { display: false }
+            : {
+                display: (ctx) => ctx.dataset.data[ctx.dataIndex] >= 5,
+                color: '#FFFFFF',
+                font: { size: 11, weight: '600', family: 'DM Sans' },
+                formatter: (value) => fmt(value) + '%',
+                textShadowBlur: 4,
+                textShadowColor: 'rgba(0,0,0,0.35)',
+                anchor: 'center',
+                align: 'center',
+              }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+    chartInstances.push(ch);
+  });
+
+  // ---- CHART SECTOR (barras horizontales) ----
+  (() => {
+    const cfg = chartDefs['chart-sector'];
+    const filtered = cfg.labels.map((l,i) => ({l, v: cfg.data[i] || 0})).filter(x => x.v > 0.1)
+      .sort((a,b) => b.v - a.v);
+    const ctx = document.getElementById('chart-sector')?.getContext('2d');
+    if (!ctx || !filtered.length) return;
+    const barColors = filtered.map((_,i) => COLORS[i % COLORS.length]);
+    const ch = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: filtered.map(x => x.l),
+        datasets: [{
+          data: filtered.map(x => x.v),
+          backgroundColor: barColors.map(c => c + 'cc'),
+          borderColor: barColors,
+          borderWidth: 1,
+          borderRadius: 4,
+          borderSkipped: false,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: (ctx) => ` ${fmt(ctx.parsed.x)}% *` } },
+          datalabels: {
+            display: true,
+            anchor: 'end',
+            align: 'end',
+            color: '#1F3B73',
+            font: { size: 11, weight: '600', family: 'DM Sans' },
+            formatter: (value) => fmt(value) + '%',
+            padding: { left: 4 },
+            clip: false,
+          }
+        },
+        scales: {
+          x: {
+            grid: { color: '#E8ECF2' },
+            ticks: { color: '#6B80A8', font: { size: 11 }, callback: v => v + '%' },
+            border: { color: '#D1D9E6' }
+          },
+          y: {
+            grid: { display: false },
+            ticks: { color: '#3D5A8A', font: { size: 11, family: 'DM Sans' } },
+            border: { color: '#D1D9E6' }
+          }
+        }
+      },
+      plugins: [ChartDataLabels]
+    });
+    chartInstances.push(ch);
+  })();
+
+  // ---- SCATTER ----
+  if (fondos.length > 0) {
+    const scatterCtx = document.getElementById('chart-scatter')?.getContext('2d');
+    if (scatterCtx) {
+      const scatterData = fondos.map(f => ({
+        x: f.vol, y: f.rent_esp, r: Math.max(4, Math.sqrt(f.peso || 1) * 3),
+        label: f.nombre?.substring(0,25) + '...'
+      }));
+      const sc = new Chart(scatterCtx, {
+        type: 'bubble',
+        data: { datasets: [{
+          label: 'Posiciones',
+          data: scatterData,
+          backgroundColor: fondos.map(f => {
+            if (f.instrumento?.includes('variable')) return 'rgba(79,142,247,0.6)';
+            if (f.instrumento?.includes('fija')) return 'rgba(52,211,153,0.6)';
+            if (f.instrumento?.includes('mixto')) return 'rgba(240,192,96,0.6)';
+            return 'rgba(251,146,60,0.6)';
+          }),
+          borderColor: 'transparent'
+        }]},
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: {
+              label: (ctx) => {
+                const f = fondos[ctx.dataIndex];
+                return [f?.nombre?.substring(0,30) || '', `Rent. esp: ${fmt(ctx.raw.y)}%`, `Volatilidad: ${fmt(ctx.raw.x)}%`, `Peso: ${fmt(f?.peso)}%`];
+              }
+            }}
+          },
+          scales: {
+            x: { title: { display: true, text: 'Volatilidad (%)', color: '#6B80A8', font:{size:11} }, grid: { color: '#E8ECF2' }, ticks: { color: '#6B80A8', font:{size:10} } },
+            y: { title: { display: true, text: 'Rent. Esperada (%)', color: '#6B80A8', font:{size:11} }, grid: { color: '#E8ECF2' }, ticks: { color: '#6B80A8', font:{size:10} } }
+          }
+        }
+      });
+      chartInstances.push(sc);
+      // Punto cartera
+      const carteraDataset = {
+        label: 'Cartera',
+        data: [{ x: cart.vol, y: cart.rent_esp, r: 10 }],
+        backgroundColor: 'rgba(240,192,96,0.9)',
+        borderColor: '#f0c060',
+        borderWidth: 2
+      };
+      sc.data.datasets.push(carteraDataset);
+      sc.update();
+    }
+  }
+
+  // ---- PROGRESS AGRUPACION ----
+  const agrupMap = {};
+  fondos.forEach(f => {
+    if (!agrupMap[f.agrupacion]) agrupMap[f.agrupacion] = 0;
+    agrupMap[f.agrupacion] += f.peso || 0;
+  });
+  const sortedAgrup = Object.entries(agrupMap).sort((a,b) => b[1]-a[1]).slice(0,12);
+  const maxAgrup = sortedAgrup[0]?.[1] || 100;
+  const progEl = document.getElementById('prog-agrupacion');
+  const progColors = ['#4f8ef7','#34d399','#f0c060','#fb923c','#c084fc','#f87171','#38bdf8','#86efac','#fde68a','#a78bfa','#fb7185','#7cc2ff'];
+  sortedAgrup.forEach(([agr, pct], i) => {
+    progEl.innerHTML += `<div class="prog-row">
+      <div class="prog-label">${agr.length > 22 ? agr.substring(0,22)+'...' : agr}</div>
+      <div class="prog-bar-wrap"><div class="prog-bar" style="width:${Math.min(100, pct/maxAgrup*100)}%;background:${progColors[i%progColors.length]};"></div></div>
+      <div class="prog-val">${fmtPct(pct)}</div>
+    </div>`;
+  });
+
+  // ---- TABLA POSICIONES ----
+  const tablaEl = document.getElementById('tabla-posiciones');
+  let tblHtml = `<table><thead><tr>
+    <th>Fondo / Activo</th><th>ISIN</th><th>Tipo</th><th>Agrupación</th>
+    <th style="text-align:right">Valor (€)</th><th style="text-align:right">Peso (%)</th>
+    <th style="text-align:right">Rent. Esp.</th><th style="text-align:right">Volatilidad</th>
+  </tr></thead><tbody>`;
+  const sortedFondos = [...fondos].sort((a,b) => (b.peso||0) - (a.peso||0));
+  sortedFondos.forEach(f => {
+    tblHtml += `<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${f.nombre}">${f.nombre}</td>
+      <td style="color:var(--text3);font-size:11px;">${f.isin || '-'}</td>
+      <td>${instrPill(f.instrumento)}</td>
+      <td style="color:var(--text3);font-size:11px;">${f.agrupacion || '-'}</td>
+      <td style="text-align:right">${fmtEur(f.valor)}</td>
+      <td style="text-align:right;font-weight:600;">${fmtPct(f.peso)}</td>
+      <td style="text-align:right" class="${rentClass(f.rent_esp)}">${fmtPct(f.rent_esp)}</td>
+      <td style="text-align:right" class="${riskClass(f.vol)}">${fmtPct(f.vol)}</td>
+    </tr>`;
+  });
+  tblHtml += '</tbody></table>';
+  tablaEl.innerHTML = tblHtml;
+
+  // ---- ANALISIS ----
+  const alertsEl = document.getElementById('analisis-alerts');
+  alerts.forEach(a => {
+    alertsEl.innerHTML += `<div class="alert-card ${a.type}">
+      <div class="alert-title">${a.icon} ${a.title}</div>
+      <div class="alert-text">${a.text}</div>
+    </div>`;
+  });
+}
+
+// ============================================================
+// ANÁLISIS AUTOMÁTICO
+// ============================================================
+function generateAlerts(cliente, cart, fondos) {
+  const alerts = [];
+  if (!fondos.length) return alerts;
+
+  // 1. Concentración
+  const top3 = [...fondos].sort((a,b)=>(b.peso||0)-(a.peso||0)).slice(0,3);
+  const top3pct = top3.reduce((s,f)=>s+(f.peso||0), 0);
+  if (top3pct > 60) {
+    alerts.push({ type: 'warn', icon: '⚠️', title: 'Alta concentración en top 3 posiciones',
+      text: `Las 3 principales posiciones representan el ${fmt(top3pct)}% de la cartera (${top3.map(f=>f.nombre?.split(' ').slice(0,2).join(' ')).join(', ')}). Se recomienda diversificar para reducir el riesgo idiosincrático.` });
+  } else {
+    alerts.push({ type: 'good', icon: '✅', title: 'Diversificación en posiciones adecuada',
+      text: `El top 3 de posiciones representa el ${fmt(top3pct)}% de la cartera. La concentración está dentro de rangos razonables.` });
+  }
+
+  // 2. Ratio Sharpe
+  if (cart.sharpe < 0.3) {
+    alerts.push({ type: 'bad', icon: '📉', title: 'Sharpe Ratio bajo — ineficiencia riesgo/rentabilidad',
+      text: `El Sharpe de ${fmt(cart.sharpe)} indica que la rentabilidad obtenida por unidad de riesgo asumido es baja. Considerar reemplazar posiciones con alta volatilidad y baja rentabilidad esperada.` });
+  } else if (cart.sharpe >= 0.5) {
+    alerts.push({ type: 'good', icon: '⚖️', title: 'Eficiencia riesgo/rentabilidad correcta',
+      text: `El Sharpe Ratio de ${fmt(cart.sharpe)} refleja una buena compensación entre la rentabilidad esperada y el riesgo asumido, por encima del umbral de 0.5.` });
+  } else {
+    alerts.push({ type: 'info', icon: '💡', title: 'Sharpe Ratio mejorable',
+      text: `Ratio de ${fmt(cart.sharpe)}. Existe margen para mejorar la eficiencia incorporando activos con mayor rentabilidad esperada ajustada al riesgo.` });
+  }
+
+  // 3. RV vs RF
+  const rv = cart.categoria?.rv || 0;
+  const rf = cart.categoria?.rf || 0;
+  if (rv > 80) {
+    alerts.push({ type: 'warn', icon: '📊', title: 'Cartera muy agresiva — exposición RV elevada',
+      text: `La renta variable representa el ${fmt(rv)}% de la cartera. Para perfiles no agresivos, se recomienda incorporar más RF o activos descorrelacionados.` });
+  } else if (rf > 90) {
+    alerts.push({ type: 'info', icon: '📊', title: 'Cartera muy conservadora — escasa exposición a RV',
+      text: `La renta fija representa el ${fmt(rf)}% de la cartera. En entornos de tipos moderados, aumentar marginalmente la exposición a RV podría mejorar la rentabilidad esperada.` });
+  } else {
+    alerts.push({ type: 'good', icon: '📊', title: 'Mix RV/RF equilibrado',
+      text: `RV: ${fmt(rv)}% / RF: ${fmt(rf)}%. La distribución entre activos de riesgo y defensivos es coherente con un perfil diversificado.` });
+  }
+
+  // 4. Liquidez
+  const liq = cart.divisa?.cc || 0;
+  if (liq > 10) {
+    alerts.push({ type: 'warn', icon: '💧', title: 'Exceso de liquidez — coste de oportunidad',
+      text: `La posición de liquidez (cuenta corriente) asciende al ${fmt(liq)}% del patrimonio. Mantener liquidez excesiva tiene un coste de oportunidad significativo. Se podría invertir en fondos monetarios o RF corto plazo.` });
+  } else if (liq < 1) {
+    alerts.push({ type: 'info', icon: '💧', title: 'Liquidez mínima disponible',
+      text: `Solo el ${fmt(liq)}% del patrimonio está en liquidez. Mantener un colchón mínimo (2-5%) para necesidades de rebalanceo o reembolso puede ser conveniente.` });
+  }
+
+  // 5. Divisas
+  const dolar = cart.divisa?.dolar || 0;
+  if (dolar > 50) {
+    alerts.push({ type: 'warn', icon: '💱', title: 'Alta exposición a Dólar USD',
+      text: `El ${fmt(dolar)}% de la cartera está expuesto al Dólar americano. Esto introduce riesgo de divisa relevante. Valorar el uso de clases con cobertura de divisa (hedgeadas).` });
+  }
+
+  // 6. Zona geográfica
+  const noCons = cart.zona?.no_cons || 0;
+  if (noCons > 50) {
+    alerts.push({ type: 'info', icon: '🌍', title: 'Alta exposición a zona "No considerada"',
+      text: `El ${fmt(noCons)}% de la cartera se clasifica en zona "No considerar" (típicamente RF sin asignación geográfica). Esto es normal en carteras con alta proporción de RF, pero limita el análisis geográfico.` });
+  }
+
+  // 7. Número de posiciones
+  if (fondos.length > 20) {
+    alerts.push({ type: 'info', icon: '🔢', title: 'Número elevado de posiciones',
+      text: `La cartera tiene ${fondos.length} posiciones. Un número elevado puede dificultar el seguimiento y generar solapamientos de exposición entre fondos. Revisar si existen fondos con exposiciones similares.` });
+  }
+
+  // 8. Rentabilidad vs riesgo
+  if (cart.rent_esp > 0 && cart.vol > 0) {
+    const ratio = cart.rent_esp / cart.vol;
+    if (ratio > 0.7) {
+      alerts.push({ type: 'good', icon: '🎯', title: 'Relación rentabilidad/riesgo favorable',
+        text: `La rentabilidad esperada (${fmt(cart.rent_esp)}%) es alta en relación a la volatilidad (${fmt(cart.vol)}%). La cartera está bien posicionada en la frontera eficiente.` });
+    }
+  }
+
+  return alerts;
+}
+
+// ============================================================
+// HELPERS
+// ============================================================
+function calcMixtos(fondos, total) {
+  const mixTotal = fondos.filter(f => f.instrumento?.includes('mixto')).reduce((s,f)=>s+f.valor,0);
+  return total > 0 ? mixTotal / total * 100 : 0;
+}
+
+function switchTab(el, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(id)?.classList.add('active');
+}
+
+// Init
+onTipoChange();
+populateClientes();
+</script>
+</body>
+</html>
