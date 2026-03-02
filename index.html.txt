@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Carteras - Actualizable desde Excel</title>
+    
+    <!-- Librerías necesarias -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Mismo CSS que tu dashboard original, lo copiamos aquí */
+        :root {
+            --bg:      #FFFFFF;
+            --bg2:     #F5F7FA;
+            --bg3:     #E8ECF2;
+            --card:    #FFFFFF;
+            --card2:   #FAFBFC;
+            --border:  #D5D9DE;
+            --accent:  #1F3B73;
+            --accent2: #3660C0;
+            --gold:    #A37512;
+            --green:   #059669;
+            --red:     #dc2626;
+            --orange:  #ea580c;
+            --text:    #1F3B73;
+            --text2:   #003B6C;
+            --text3:   #7F7F7F;
+            --shadow:  0 1px 3px rgba(31,59,115,0.08), 0 1px 2px rgba(31,59,115,0.04);
+            --shadow-md: 0 4px 6px rgba(31,59,115,0.06), 0 2px 4px rgba(31,59,115,0.04);
+            --font-display: 'DM Serif Display', serif;
+            --font-body: 'DM Sans', sans-serif;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); font-family: var(--font-body); font-size: 14px; min-height: 100vh; }
+
+        /* HEADER */
+        .header { 
+            background: #FFFFFF; 
+            border-bottom: 1px solid var(--border); 
+            padding: 0 32px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between; 
+            height: 64px; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: var(--shadow); 
+        }
+        .logo { 
+            font-family: var(--font-display); 
+            font-size: 22px; 
+            color: var(--text); 
+            letter-spacing: -0.5px; 
+        }
+        .logo span { color: #1F3B73; }
+        .header-date { color: var(--text3); font-size: 12px; font-weight: 300; }
+
+        /* BOTÓN DE CARGA */
+        .upload-btn {
+            background: linear-gradient(135deg, #1F3B73, #3660C0);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: var(--shadow);
+        }
+        .upload-btn:hover {
+            background: linear-gradient(135deg, #3660C0, #1F3B73);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+        .upload-btn input {
+            display: none;
+        }
+
+        /* SELECTORS */
+        .selectors-bar { 
+            background: #FFFFFF; 
+            border-bottom: 1px solid var(--border); 
+            padding: 16px 32px; 
+            display: flex; 
+            gap: 16px; 
+            align-items: center; 
+            flex-wrap: wrap; 
+            box-shadow: var(--shadow); 
+        }
+        .sel-group { display: flex; flex-direction: column; gap: 4px; }
+        .sel-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); }
+        select { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            border-radius: 8px; 
+            padding: 8px 32px 8px 12px; 
+            font-family: var(--font-body); 
+            font-size: 13px; 
+            cursor: pointer; 
+            appearance: none; 
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='%231F3B73'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); 
+            background-repeat: no-repeat; 
+            background-position: right 10px center; 
+            min-width: 200px; 
+            box-shadow: var(--shadow); 
+        }
+        select:focus { 
+            outline: none; 
+            border-color: var(--accent); 
+            box-shadow: 0 0 0 3px rgba(31,59,115,0.12); 
+        }
+        .badge-tipo { 
+            display: inline-flex; 
+            align-items: center; 
+            padding: 4px 12px; 
+            border-radius: 20px; 
+            font-size: 11px; 
+            font-weight: 600; 
+            letter-spacing: 0.5px; 
+        }
+        .badge-a { background: rgba(31,59,115,0.1); color: #1F3B73; border: 1px solid rgba(31,59,115,0.25); }
+        .badge-g { background: rgba(5,150,105,0.1); color: var(--green); border: 1px solid rgba(5,150,105,0.25); }
+        .badge-p { background: rgba(217,119,6,0.1); color: var(--gold); border: 1px solid rgba(217,119,6,0.25); }
+
+        /* MAIN - resto del CSS igual que tu original */
+        .main { padding: 24px 32px; display: flex; flex-direction: column; gap: 24px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+        .kpi-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; position: relative; overflow: hidden; transition: box-shadow 0.2s, border-color 0.2s; box-shadow: var(--shadow); }
+        .kpi-card:hover { box-shadow: var(--shadow-md); border-color: #1F3B73; }
+        .kpi-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+        .kpi-card.blue::before  { background: linear-gradient(90deg, #1F3B73, #3D5A8A); }
+        .kpi-card.green::before { background: linear-gradient(90deg, #059669, #34d399); }
+        .kpi-card.gold::before  { background: linear-gradient(90deg, #d97706, #fbbf24); }
+        .kpi-card.orange::before{ background: linear-gradient(90deg, #ea580c, #fb923c); }
+        .kpi-card.red::before   { background: linear-gradient(90deg, #dc2626, #f87171); }
+        .kpi-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+        .kpi-value { font-family: var(--font-display); font-size: 28px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+        .kpi-sub { font-size: 11px; color: var(--text3); }
+        .kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 20px; opacity: 0.18; }
+
+        /* GRID */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; }
+
+        /* PANEL */
+        .panel { background: var(--card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+        .panel-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; background: var(--card); }
+        .panel-title { font-family: var(--font-display); font-size: 16px; color: var(--text); }
+        .panel-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+        .panel-body { padding: 20px; }
+
+        /* CHART CONTAINERS */
+        .chart-wrap { position: relative; }
+        .chart-wrap canvas { max-height: 220px; }
+        .chart-wrap-lg canvas { max-height: 300px; }
+
+        /* TABLE */
+        .tbl-wrap { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        thead th { background: var(--bg2); padding: 10px 12px; text-align: left; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text3); position: sticky; top: 0; border-bottom: 1px solid var(--border); }
+        tbody tr { border-bottom: 1px solid var(--bg3); transition: background 0.15s; }
+        tbody tr:hover { background: var(--card2); }
+        tbody td { padding: 9px 12px; color: var(--text2); }
+        tbody td:first-child { color: var(--text); font-weight: 500; }
+        .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 10px; font-weight: 600; }
+        .pill-rv  { background: rgba(31,59,115,0.1);  color: #1F3B73; }
+        .pill-rf  { background: rgba(5,150,105,0.1);  color: #047857; }
+        .pill-mix { background: rgba(217,119,6,0.1);  color: #b45309; }
+        .pill-alt { background: rgba(234,88,12,0.1);  color: #c2410c; }
+        .pill-mm  { background: rgba(124,58,237,0.1); color: #6d28d9; }
+
+        /* PROGRESS BAR */
+        .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+        .prog-label { width: 130px; font-size: 11px; color: var(--text2); flex-shrink: 0; text-align: right; }
+        .prog-bar-wrap { flex: 1; height: 6px; background: var(--bg2); border-radius: 3px; overflow: hidden; }
+        .prog-bar { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+        .prog-val { width: 45px; font-size: 11px; color: var(--text); text-align: right; flex-shrink: 0; font-weight: 600; }
+
+        /* SCATTER */
+        .scatter-wrap { position: relative; width: 100%; height: 100%; min-height: 260px; }
+        .scatter-wrap canvas { position: absolute; top: 0; left: 0; width: 100% !important; height: 100% !important; }
+
+        /* ANALYSIS */
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .alert-card { background: var(--card2); border-radius: 10px; padding: 14px 16px; border-left: 3px solid; border: 1px solid var(--border); border-left-width: 3px; }
+        .alert-card.warn { border-color: var(--orange); background: rgba(234,88,12,0.04); }
+        .alert-card.info { border-color: #1F3B73; background: rgba(31,59,115,0.04); }
+        .alert-card.good { border-color: var(--green);  background: rgba(5,150,105,0.04); }
+        .alert-card.bad  { border-color: var(--red);    background: rgba(220,38,38,0.04); }
+        .alert-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+        .alert-card.warn .alert-title { color: var(--orange); }
+        .alert-card.info .alert-title { color: #1F3B73; }
+        .alert-card.good .alert-title { color: var(--green); }
+        .alert-card.bad  .alert-title { color: var(--red); }
+        .alert-text { font-size: 11px; color: var(--text2); line-height: 1.5; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); padding: 0 20px; background: var(--card); }
+        .tab { padding: 12px 16px; font-size: 12px; font-weight: 500; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.2s; }
+        .tab.active { color: #1F3B73; border-bottom-color: #1F3B73; }
+        .tab:hover:not(.active) { color: var(--text2); }
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+
+        /* SECTION TITLE */
+        .section-title { font-family: var(--font-display); font-size: 13px; color: var(--text3); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* ESTADO DE CARGA */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            font-family: var(--font-display);
+            color: var(--accent);
+            font-size: 18px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--bg3);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* RESPONSIVE */
+        @media (max-width: 1200px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 900px) {
+            .main { padding: 16px; }
+            .grid-2, .grid-3 { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg2); }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+        
+        .no-data { color: var(--text3); font-size: 12px; text-align: center; padding: 40px; }
+        .rent-positive { color: #059669; font-weight: 600; }
+        .rent-neutral   { color: #d97706; font-weight: 600; }
+        .risk-high { color: #dc2626; font-weight: 600; }
+        .risk-med  { color: #ea580c; font-weight: 600; }
+        .risk-low  { color: #059669; font-weight: 600; }
+        .data-info { font-size: 11px; color: var(--text3); background: var(--bg2); padding: 4px 8px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Portfolio<span>Intelligence</span></div>
+    <div style="display:flex;align-items:center;gap:20px;">
+        <div id="badge-tipo-header"></div>
+        <div class="header-date" id="fecha-actualizacion">Sin datos cargados</div>
+        <label class="upload-btn">
+            ?? Cargar Excel
+            <input type="file" id="excelUpload" accept=".xlsx, .xls, .csv">
+        </label>
+    </div>
+</div>
+
+<div class="selectors-bar">
+    <div class="sel-group">
+        <div class="sel-label">Tipo de cliente</div>
+        <select id="sel-tipo" onchange="onTipoChange()">
+            <option value="">— Todos los tipos —</option>
+        </select>
+    </div>
+    <div class="sel-group">
+        <div class="sel-label">Grupo</div>
+        <select id="sel-grupo" onchange="onGrupoChange()">
+            <option value="">— Todos los grupos —</option>
+        </select>
+    </div>
+    <div class="sel-group">
+        <div class="sel-label">Cliente / Cartera</div>
+        <select id="sel-cliente" onchange="onClienteChange()">
+            <option value="">— Selecciona cliente —</option>
+        </select>
+    </div>
+    <div id="info-codigo" style="color:var(--text3);font-size:11px;margin-top:18px;"></div>
+</div>
+
+<div class="main" id="main-content">
+    <div class="no-data" style="padding:80px;">
+        <div style="font-size:40px;margin-bottom:16px;">??</div>
+        <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Carga un archivo Excel</div>
+        <div style="color:var(--text3);">Haz clic en "Cargar Excel" para subir tus datos actualizados</div>
+    </div>
+</div>
+
+<div id="loading-overlay" class="loading-overlay" style="display: none;">
+    <div class="loading-spinner"></div>
+    <div>Cargando datos...</div>
+</div>
+
+<script>
+// ============================================================
+// VARIABLES GLOBALES
+// ============================================================
+let RAW_DATA = { clientes: [] };
+let chartInstances = [];
+
+// ============================================================
+// UTILIDADES (mismas que tu dashboard original)
+// ============================================================
+const fmt = (n, dec=2) => n != null ? n.toLocaleString('es-ES', {minimumFractionDigits:dec, maximumFractionDigits:dec}) : '-';
+const fmtEur = (n) => n != null ? '€ ' + n.toLocaleString('es-ES', {minimumFractionDigits:0, maximumFractionDigits:0}) : '-';
+const fmtPct = (n) => n != null ? fmt(n) + '%' : '-';
+
+function tipoPill(tipo) {
+    if (!tipo) return '';
+    const cls = tipo.includes('Ases') ? 'badge-a' : tipo.includes('Gest') ? 'badge-g' : 'badge-p';
+    const lbl = tipo.includes('Ases') ? 'Asesoramiento' : tipo.includes('Gest') ? 'Gestión' : 'Partícipe';
+    return `<span class="badge-tipo ${cls}">${lbl}</span>`;
+}
+
+function instrPill(instr) {
+    if (!instr) return '';
+    let cls = 'pill-mix', lbl = instr;
+    if (instr.includes('variable')) { cls = 'pill-rv'; lbl = 'RV'; }
+    else if (instr.includes('fija')) { cls = 'pill-rf'; lbl = 'RF'; }
+    else if (instr.includes('mixto')) { cls = 'pill-mix'; lbl = 'Mixto'; }
+    else if (instr.includes('Commodity') || instr.includes('ETC')) { cls = 'pill-alt'; lbl = 'ETC'; }
+    else if (instr.includes('monetario')) { cls = 'pill-mm'; lbl = 'MM'; }
+    else if (instr.includes('alternativa')) { cls = 'pill-alt'; lbl = 'Alt'; }
+    return `<span class="pill ${cls}">${lbl}</span>`;
+}
+
+function riskClass(vol) {
+    if (vol >= 12) return 'risk-high';
+    if (vol >= 6) return 'risk-med';
+    return 'risk-low';
+}
+
+function rentClass(r) {
+    if (r >= 7) return 'rent-positive';
+    return 'rent-neutral';
+}
+
+function destroyCharts() {
+    chartInstances.forEach(c => { try { c.destroy(); } catch(e){} });
+    chartInstances = [];
+}
+
+// ============================================================
+// CARGA DE EXCEL
+// ============================================================
+document.getElementById('excelUpload').addEventListener('change', handleFileUpload);
+
+async function handleFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    showLoading();
+    
+    try {
+        const data = await readExcelFile(file);
+        RAW_DATA = transformExcelData(data);
+        
+        // Actualizar fecha
+        const now = new Date();
+        document.getElementById('fecha-actualizacion').textContent = 
+            `Datos actualizados: ${now.toLocaleDateString('es-ES')} ${now.toLocaleTimeString('es-ES')}`;
+        
+        // Poblar selects
+        populateTipoSelect();
+        onTipoChange();
+        
+        hideLoading();
+        
+    } catch (error) {
+        hideLoading();
+        alert('Error al procesar el archivo: ' + error.message);
+        console.error(error);
+    }
+}
+
+function showLoading() {
+    document.getElementById('loading-overlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+
+async function readExcelFile(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = (e) => {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                
+                // Asumimos que la primera hoja contiene los datos
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // Convertir a JSON
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                resolve(jsonData);
+                
+            } catch (error) {
+                reject(error);
+            }
+        };
+        
+        reader.onerror = (error) => reject(error);
+        reader.readAsArrayBuffer(file);
+    });
+}
+
+// ============================================================
+// TRANSFORMAR DATOS DE EXCEL AL FORMATO DEL DASHBOARD
+// ============================================================
+function transformExcelData(excelRows) {
+    // Esta función debe adaptarse según la estructura de tu Excel
+    // Aquí te doy un ejemplo basado en los datos que tenías
+    
+    const clientes = [];
+    
+    // Saltamos la primera fila si es cabecera
+    for (let i = 1; i < excelRows.length; i++) {
+        const row = excelRows[i];
+        if (!row || row.length < 5) continue; // Saltar filas vacías
+        
+        // Adapta estos índices según las columnas de tu Excel
+        const cliente = {
+            tipo: row[0] || 'A - Asesoramiento',      // Columna A
+            grupo: parseInt(row[1]) || 0,              // Columna B
+            codigo: row[2]?.toString() || '',          // Columna C
+            nombre: row[3] || 'Cliente sin nombre',    // Columna D
+            cartera: {
+                total_fondos: parseFloat(row[4]) || 0, // Columna E
+                rent_esp: parseFloat(row[5]) || 0,     // Columna F
+                vol: parseFloat(row[6]) || 0,          // Columna G
+                sharpe: parseFloat(row[7]) || 0,       // Columna H
+                var95: parseFloat(row[8]) || 0,        // Columna I
+                fondos: [],                             // Lo rellenaremos después
+                categoria: {},
+                divisa: {},
+                zona: {},
+                sector: {}
+            }
+        };
+        
+        clientes.push(cliente);
+    }
+    
+    // Aquí deberías añadir la lógica para procesar los fondos
+    // y las distribuciones por categoría, divisa, etc.
+    // Basado en cómo tengas estructurado tu Excel
+    
+    return { clientes };
+}
+
+// ============================================================
+// FUNCIONES DE SELECCIÓN (adaptadas de tu original)
+// ============================================================
+function getGrupoId(cliente) {
+    return cliente.grupo;
+}
+
+function getGrupoLabel(grupoId) {
+    const ref = RAW_DATA.clientes.find(c => String(c.grupo) === String(grupoId));
+    return ref ? String(ref.grupo) : String(grupoId);
+}
+
+function getClienteId(cliente) {
+    return cliente.codigo;
+}
+
+function getClienteLabel(cliente) {
+    return cliente.nombre || cliente.codigo;
+}
+
+function populateTipoSelect() {
+    const tipos = [...new Set(RAW_DATA.clientes.map(c => c.tipo))];
+    const selTipo = document.getElementById('sel-tipo');
+    selTipo.innerHTML = '<option value="">— Todos los tipos —</option>';
+    
+    tipos.sort().forEach(tipo => {
+        const opt = document.createElement('option');
+        opt.value = tipo;
+        opt.textContent = tipo;
+        selTipo.appendChild(opt);
+    });
+}
+
+function onTipoChange() {
+    const tipo = document.getElementById('sel-tipo').value;
+    const selGrupo = document.getElementById('sel-grupo');
+    selGrupo.innerHTML = '<option value="">— Todos los grupos —</option>';
+
+    const filtered = RAW_DATA.clientes.filter(c => !tipo || c.tipo === tipo);
+    const grupos = [...new Map(filtered.map(c => [String(c.grupo), c])).values()]
+        .sort((a, b) => a.grupo - b.grupo);
+    
+    grupos.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.grupo;
+        opt.textContent = 'Grupo ' + c.grupo;
+        selGrupo.appendChild(opt);
+    });
+
+    populateClientes();
+    const consolidado = consolidarTodos();
+    if (consolidado) renderDashboard(consolidado);
+}
+
+function onGrupoChange() {
+    populateClientes();
+    const consolidado = consolidarTodos();
+    if (consolidado) renderDashboard(consolidado);
+}
+
+function populateClientes() {
+    const tipo = document.getElementById('sel-tipo').value;
+    const grupo = document.getElementById('sel-grupo').value;
+    const sel = document.getElementById('sel-cliente');
+    sel.innerHTML = '<option value="">— Todos los clientes —</option>';
+
+    if (grupo) {
+        const optGroup = document.createElement('option');
+        optGroup.value = '__grupo__' + grupo;
+        optGroup.textContent = '?? Ver grupo ' + grupo + ' — consolidado';
+        sel.appendChild(optGroup);
+    }
+
+    RAW_DATA.clientes.filter(c => {
+        if (tipo && c.tipo !== tipo) return false;
+        if (grupo && String(c.grupo) !== String(grupo)) return false;
+        return true;
+    }).forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.codigo;
+        opt.textContent = c.nombre + ' (' + c.codigo + ')';
+        sel.appendChild(opt);
+    });
+}
+
+function onClienteChange() {
+    const val = document.getElementById('sel-cliente').value;
+    
+    if (!val) {
+        const consolidado = consolidarTodos();
+        if (consolidado) renderDashboard(consolidado);
+        return;
+    }
+
+    if (val.startsWith('__grupo__')) {
+        const grupoId = val.replace('__grupo__', '');
+        const consolidado = consolidarGrupo(grupoId);
+        if (consolidado) renderDashboard(consolidado);
+        return;
+    }
+
+    const cliente = RAW_DATA.clientes.find(c => String(c.codigo) === String(val));
+    if (cliente) renderDashboard(cliente);
+}
+
+function clearDashboard() {
+    document.getElementById('main-content').innerHTML = `
+        <div class="no-data" style="padding:80px;">
+            <div style="font-size:40px;margin-bottom:16px;">??</div>
+            <div style="font-size:18px;font-family:var(--font-display);color:var(--text2);margin-bottom:8px;">Selecciona un cliente</div>
+            <div style="color:var(--text3);">Usa los filtros superiores para visualizar el dashboard</div>
+        </div>`;
+    document.getElementById('badge-tipo-header').innerHTML = '';
+    document.getElementById('info-codigo').textContent = '';
+}
+
+// ============================================================
+// FUNCIONES DE CONSOLIDACIÓN (simplificadas)
+// ============================================================
+function consolidarTodos() {
+    const tipo = document.getElementById('sel-tipo').value;
+    const grupo = document.getElementById('sel-grupo').value;
+    
+    const miembros = RAW_DATA.clientes.filter(c =>
+        (!tipo || c.tipo === tipo) &&
+        (!grupo || String(c.grupo) === String(grupo)) &&
+        c.cartera && c.cartera.total_fondos > 0
+    );
+    
+    if (!miembros.length) return null;
+
+    const totalGrupo = miembros.reduce((s, c) => s + (c.cartera.total_fondos || 0), 0);
+
+    // Rentabilidad y volatilidad ponderadas
+    const wAvg = (key) => miembros.reduce((s, c) => s + (c.cartera[key] || 0) * (c.cartera.total_fondos / totalGrupo), 0);
+    const rent_esp = wAvg('rent_esp');
+    const vol = wAvg('vol');
+    const sharpe = vol > 0 ? (rent_esp - 3.0) / vol : 0;
+    const var95 = vol * 1.645;
+
+    return {
+        tipo: tipo || 'Todos',
+        codigo: 'TODOS',
+        nombre: `Consolidado (${miembros.length} carteras)`,
+        _esConsolidado: true,
+        _miembros: miembros,
+        cartera: {
+            total_fondos: totalGrupo,
+            rent_esp: Math.round(rent_esp * 100) / 100,
+            vol: Math.round(vol * 100) / 100,
+            sharpe: Math.round(sharpe * 100) / 100,
+            var95: Math.round(var95 * 100) / 100,
+            fondos: [],
+            categoria: {},
+            divisa: {},
+            zona: {},
+            sector: {}
+        }
+    };
+}
+
+function consolidarGrupo(grupoId) {
+    const miembros = RAW_DATA.clientes.filter(c =>
+        String(c.grupo) === String(grupoId) &&
+        c.cartera && c.cartera.total_fondos > 0
+    );
+    
+    if (!miembros.length) return null;
+
+    const totalGrupo = miembros.reduce((s, c) => s + (c.cartera.total_fondos || 0), 0);
+    const wAvg = (key) => miembros.reduce((s, c) => s + (c.cartera[key] || 0) * (c.cartera.total_fondos / totalGrupo), 0);
+
+    return {
+        tipo: miembros[0].tipo,
+        grupo: grupoId,
+        codigo: 'GRUPO-' + grupoId,
+        nombre: `Grupo ${grupoId} — Consolidado (${miembros.length} carteras)`,
+        _esGrupo: true,
+        _miembros: miembros,
+        cartera: {
+            total_fondos: totalGrupo,
+            rent_esp: Math.round(wAvg('rent_esp') * 100) / 100,
+            vol: Math.round(wAvg('vol') * 100) / 100,
+            sharpe: Math.round((wAvg('rent_esp') - 3.0) / wAvg('vol') * 100) / 100,
+            var95: Math.round(wAvg('vol') * 1.645 * 100) / 100,
+            fondos: [],
+            categoria: {},
+            divisa: {},
+            zona: {},
+            sector: {}
+        }
+    };
+}
+
+// ============================================================
+// RENDERIZADO DEL DASHBOARD (simplificado como ejemplo)
+// ============================================================
+function renderDashboard(cliente) {
+    destroyCharts();
+    const cart = cliente.cartera || {};
+    const total = cart.total_fondos || 0;
+
+    document.getElementById('badge-tipo-header').innerHTML = tipoPill(cliente.tipo) +
+        (cliente._esGrupo ? '<span style="margin-left:8px;background:rgba(31,59,115,0.1);color:#1F3B73;border:1px solid rgba(31,59,115,0.25);padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;">CONSOLIDADO</span>' : '');
+    
+    document.getElementById('info-codigo').textContent = cliente._esGrupo
+        ? `Grupo ${cliente.grupo} | ${cliente._miembros.length} carteras consolidadas | Patrimonio total: ${fmtEur(total)}`
+        : `Código: ${cliente.codigo} | Grupo: ${cliente.grupo}`;
+
+    document.getElementById('main-content').innerHTML = `
+        <div class="fade-in">
+            <div class="section-title">${cliente._esGrupo ? "Grupo Consolidado — " : "Resumen de Cartera — "}${cliente.nombre}</div>
+            
+            <!-- KPIs básicos -->
+            <div class="kpi-grid" id="kpi-grid">
+                <div class="kpi-card blue">
+                    <div class="kpi-icon">??</div>
+                    <div class="kpi-label">Patrimonio Total</div>
+                    <div class="kpi-value">${fmtEur(total)}</div>
+                    <div class="kpi-sub">${cliente._esGrupo ? cliente._miembros.length + ' carteras' : 'En fondos'}</div>
+                </div>
+                <div class="kpi-card green">
+                    <div class="kpi-icon">??</div>
+                    <div class="kpi-label">Rent. Esperada</div>
+                    <div class="kpi-value">${fmtPct(cart.rent_esp)}</div>
+                    <div class="kpi-sub">Ponderada</div>
+                </div>
+                <div class="kpi-card ${cart.vol >= 12 ? 'red' : cart.vol >= 7 ? 'orange' : 'green'}">
+                    <div class="kpi-icon">?</div>
+                    <div class="kpi-label">Volatilidad</div>
+                    <div class="kpi-value">${fmtPct(cart.vol)}</div>
+                    <div class="kpi-sub">Desv. estándar</div>
+                </div>
+                <div class="kpi-card gold">
+                    <div class="kpi-icon">??</div>
+                    <div class="kpi-label">Sharpe Ratio</div>
+                    <div class="kpi-value">${fmt(cart.sharpe)}</div>
+                    <div class="kpi-sub">Rf = 3%</div>
+                </div>
+                <div class="kpi-card red">
+                    <div class="kpi-icon">???</div>
+                    <div class="kpi-label">VaR 95%</div>
+                    <div class="kpi-value">${fmtPct(cart.var95)}</div>
+                    <div class="kpi-sub">Pérdida máx.</div>
+                </div>
+            </div>
+
+            <!-- Mensaje informativo -->
+            <div class="panel" style="margin-top: 20px;">
+                <div class="panel-header">
+                    <div class="panel-title">?? Nota sobre los datos</div>
+                </div>
+                <div class="panel-body">
+                    <p style="color: var(--text2); font-size: 13px;">
+                        Este dashboard está configurado para cargar datos desde Excel. 
+                        Para ver la información completa con gráficos y análisis detallado,
+                        necesitas estructurar tu Excel con todas las columnas necesarias 
+                        (fondos, categorías, divisas, zonas, sectores).
+                    </p>
+                    <p style="color: var(--text3); font-size: 12px; margin-top: 10px;">
+                        Los KPIs básicos ya funcionan. Para el análisis completo, adapta la 
+                        función <code>transformExcelData()</code> según la estructura de tu Excel.
+                    </p>
+                </div>
+            </div>
+        </div>`;
+}
+
+// Inicialización
+onTipoChange();
+</script>
+</body>
+</html>
